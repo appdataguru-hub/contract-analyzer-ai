@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contract Analyzer AI</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 960px; margin: 40px auto; padding: 0 20px;
+        line-height: 1.6; color: #222; background: #fafafa; }
+h1,h2,h3 { color: #1a1a2e; }
+h1 { border-bottom: 2px solid #1a1a2e; padding-bottom: 8px; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th,td { border: 1px solid #ccc; padding: 8px 12px; }
+th { background: #1a1a2e; color: #fff; }
+tr:nth-child(even) { background: #f5f5f5; }
+pre { background: #1a1a2e; color: #a8dadc; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+a { color: #0f3460; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+.badge-critical { background: #dc3545; color: #fff; }
+.badge-high { background: #fd7e14; color: #fff; }
+.badge-medium { background: #ffc107; color: #000; }
+.badge-low { background: #28a745; color: #fff; }
+.status-✅ { color: #28a745; font-weight: bold; }
+.status-⚠️ { color: #fd7e14; font-weight: bold; }
+</style>
+</head>
+<body>
+<nav style="background:#1a1a2e;padding:12px 20px;margin:-40px -20px 30px;border-radius:0">
+ <a href="index.html" style="color:#fff;margin-right:20px">📄 README</a>
+ <a href="qa_audit.html" style="color:#a8dadc;margin-right:20px">🔍 QA Audit</a>
+ <a href="bugs.html" style="color:#a8dadc;margin-right:20px">🐛 Bugs</a>
+ <a href="changelog.html" style="color:#a8dadc">📝 Changelog</a>
+</nav>
+<h1 id="contract-analyzer-ai">Contract Analyzer AI</h1>
+<p><img alt="Python Version" src="https://img.shields.io/badge/python-3.11-blue" />
+<img alt="License" src="https://img.shields.io/badge/license-MIT-green" />
+<img alt="Docker" src="https://img.shields.io/badge/docker-ready-2496ED" />
+<img alt="CI" src="https://img.shields.io/badge/CI-passing-brightgreen" />
+<img alt="Coverage" src="https://img.shields.io/badge/coverage-80%25-yellowgreen" />
+<a href="http://176.108.252.198:8501"><img alt="Demo" src="https://img.shields.io/badge/demo-online-brightgreen?style=for-the-badge" /></a>
+<a href="http://176.108.252.198:8000/docs"><img alt="API Docs" src="https://img.shields.io/badge/API-Docs-blue?style=for-the-badge" /></a></p>
+<p><strong>Анализатор договоров на базе гибридного RAG и GigaChat</strong></p>
+<p>Сервис для загрузки PDF-документов (договоров, контрактов) и получения ответов на вопросы по их содержанию. Использует современный стек AI/ML: гибридный retrieval (векторный + BM25 с кэшированием), генерацию ответов через GigaChat и автономную оценку качества через DeepEval.</p>
+<hr />
+<h2 id="_1">🌐 Демо</h2>
+<p>Проект доступен для тестирования по адресу:</p>
+<p><strong><a href="http://176.108.252.198:8501">http://176.108.252.198:8501</a></strong></p>
+<ul>
+<li><strong>Фронтенд (Streamlit)</strong> — загружайте PDF и задавайте вопросы через веб-интерфейс</li>
+<li><strong>Бэкенд API</strong>: <code>http://176.108.252.198:8000</code></li>
+<li><strong>Swagger-документация</strong>: <a href="http://176.108.252.198:8000/docs">http://176.108.252.198:8000/docs</a></li>
+</ul>
+<p>⚠️ <strong>Внимание:</strong> Демо развёрнуто на тестовой VM и может быть недоступно в случае остановки сервера. Для локального запуска используйте <a href="#быстрый-старт">инструкцию по установке</a>.</p>
+<hr />
+<h2 id="_2">Архитектура</h2>
+<div class="codehilite"><pre><span></span><code><span class="w">                         </span><span class="err">┌─────────────────────────────────────┐</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">   </span><span class="n">Streamlit</span><span class="w"> </span><span class="p">(</span><span class="n">port</span><span class="w"> </span><span class="mi">8501</span><span class="p">)</span><span class="w">             </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">   </span><span class="n">frontend</span><span class="o">/</span><span class="n">streamlit_app</span><span class="o">.</span><span class="n">py</span><span class="w">         </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">└──────────────┬──────────────────────┘</span>
+<span class="w">                                        </span><span class="err">│</span><span class="w"> </span><span class="n">REST</span><span class="w"> </span><span class="n">API</span>
+<span class="w">                         </span><span class="err">┌──────────────▼──────────────────────┐</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">         </span><span class="n">FastAPI</span><span class="w"> </span><span class="p">(</span><span class="n">port</span><span class="w"> </span><span class="mi">8000</span><span class="p">)</span><span class="w">          </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">                                       </span><span class="err">│</span>
+<span class="w">  </span><span class="n">POST</span><span class="w"> </span><span class="o">/</span><span class="n">upload</span><span class="w">  </span><span class="err">────────▶│</span><span class="w">  </span><span class="err">┌───────────┐</span><span class="w">   </span><span class="err">┌────────────┐</span><span class="w">      </span><span class="err">│</span>
+<span class="w">  </span><span class="n">POST</span><span class="w"> </span><span class="o">/</span><span class="n">ask</span><span class="w">     </span><span class="err">────────▶│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">Ingestion</span><span class="w"> </span><span class="err">│──▶│</span><span class="w">  </span><span class="n">Qdrant</span><span class="w">    </span><span class="err">│</span><span class="w">      </span><span class="err">│</span>
+<span class="w">  </span><span class="n">POST</span><span class="w"> </span><span class="o">/</span><span class="n">evaluate</span><span class="err">────────▶│</span><span class="w">  </span><span class="err">│</span><span class="w">           </span><span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="p">(</span><span class="n">Vector</span><span class="w"> </span><span class="n">DB</span><span class="p">)</span><span class="err">│</span><span class="w">      </span><span class="err">│</span>
+<span class="w">  </span><span class="n">GET</span><span class="w">  </span><span class="o">/</span><span class="n">health</span><span class="w">  </span><span class="err">────────▶│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">pdfplumber</span><span class="err">│</span><span class="w">   </span><span class="err">└─────┬──────┘</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">chunking</span><span class="w">  </span><span class="err">│</span><span class="w">         </span><span class="err">│</span><span class="w">              </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">embedding</span><span class="w"> </span><span class="err">│</span><span class="w">   </span><span class="err">┌─────▼──────┐</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">└───────────┘</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">BM25Cache</span><span class="w">  </span><span class="err">│</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">                  </span><span class="err">│</span><span class="w"> </span><span class="p">(</span><span class="ow">in</span><span class="o">-</span><span class="n">memory</span><span class="p">)</span><span class="err">│</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">┌───────────┐</span><span class="w">   </span><span class="err">└─────┬──────┘</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">Retrieval</span><span class="w"> </span><span class="err">│◀─────────┘</span><span class="w">             </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">hybrid</span><span class="w">    </span><span class="err">│</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">search</span><span class="w">    </span><span class="err">│──▶┌─────────────┐</span><span class="w">     </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">└───────────┘</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="n">Generation</span><span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">                  </span><span class="err">│</span><span class="w"> </span><span class="n">GigaChat</span><span class="w">    </span><span class="err">│</span><span class="w">     </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">┌───────────┐</span><span class="w">   </span><span class="err">└─────────────┘</span><span class="w">     </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="n">Evaluation</span><span class="w"> </span><span class="err">│</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="n">DeepEval</span><span class="w">  </span><span class="err">│</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">│</span><span class="w">  </span><span class="err">└───────────┘</span><span class="w">                        </span><span class="err">│</span>
+<span class="w">                         </span><span class="err">└─────────────────────────────────────┘</span>
+</code></pre></div>
+
+<h3 id="_3">Компоненты</h3>
+<table>
+<thead>
+<tr>
+<th>Компонент</th>
+<th>Технология</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API</strong></td>
+<td>FastAPI + Uvicorn</td>
+<td>4 эндпоинта: upload, ask, evaluate, health</td>
+</tr>
+<tr>
+<td><strong>Ingestion</strong></td>
+<td>pdfplumber, LangChain</td>
+<td>Извлечение текста, чанкинг, векторизация</td>
+</tr>
+<tr>
+<td><strong>Vector DB</strong></td>
+<td>Qdrant</td>
+<td>Хранение и поиск эмбеддингов</td>
+</tr>
+<tr>
+<td><strong>Embeddings</strong></td>
+<td>multilingual-e5-large (HuggingFace)</td>
+<td>Семантические векторы текста</td>
+</tr>
+<tr>
+<td><strong>Retrieval</strong></td>
+<td>EnsembleRetriever (Vector + BM25) + BM25Cache</td>
+<td>Гибридный поиск с кэшированием</td>
+</tr>
+<tr>
+<td><strong>Generation</strong></td>
+<td>GigaChat API</td>
+<td>Формирование ответа на русском</td>
+</tr>
+<tr>
+<td><strong>Evaluation</strong></td>
+<td>DeepEval</td>
+<td>Оценка качества (Faithfulness, Relevancy)</td>
+</tr>
+<tr>
+<td><strong>Frontend</strong></td>
+<td>Streamlit</td>
+<td>Веб-интерфейс для демонстрации</td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td>Docker, Docker Compose</td>
+<td>Контейнеризация</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">Быстрый старт</h2>
+<h3 id="1">1. Клонирование и настройка</h3>
+<div class="codehilite"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-username/contract-analyzer-ai.git
+<span class="nb">cd</span><span class="w"> </span>contract-analyzer-ai
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
+</code></pre></div>
+
+<h3 id="2">2. Настройка переменных окружения</h3>
+<div class="codehilite"><pre><span></span><code>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Отредактируйте .env:</span>
+<span class="c1"># - GIGACHAT_CREDENTIALS: ваш ключ доступа к GigaChat</span>
+<span class="c1"># - GIGACHAT_VERIFY_SSL: true (prod) / false (dev)</span>
+<span class="c1"># - API_KEY: опциональный ключ для аутентификации API</span>
+<span class="c1"># - LOG_LEVEL: INFO / DEBUG</span>
+</code></pre></div>
+
+<h3 id="3-docker">3. Запуск через Docker (рекомендуется)</h3>
+<div class="codehilite"><pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>--build
+<span class="c1"># Сервис будет доступен на http://localhost:8000</span>
+<span class="c1"># Swagger UI: http://localhost:8000/docs</span>
+</code></pre></div>
+
+<h3 id="4-streamlit">4. Запуск с фронтендом (Streamlit)</h3>
+<div class="codehilite"><pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>--build
+<span class="c1"># Бэкенд: http://localhost:8000</span>
+<span class="c1"># Фронтенд: http://localhost:8501</span>
+<span class="c1"># Swagger UI: http://localhost:8000/docs</span>
+</code></pre></div>
+
+<h3 id="5-docker">5. Локальный запуск (без Docker)</h3>
+<div class="codehilite"><pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>-d<span class="w"> </span>qdrant
+uvicorn<span class="w"> </span>app.main:app<span class="w"> </span>--reload<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</code></pre></div>
+
+<h3 id="6">6. Запуск фронтенда отдельно</h3>
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>frontend
+streamlit<span class="w"> </span>run<span class="w"> </span>streamlit_app.py
+</code></pre></div>
+
+<hr />
+<h2 id="_5">Безопасность</h2>
+<h3 id="api-">API-аутентификация (опционально)</h3>
+<p>Установите <code>API_KEY</code> в <code>.env</code> для включения проверки Bearer-токена:</p>
+<div class="codehilite"><pre><span></span><code>API_KEY=your-secret-api-key
+</code></pre></div>
+
+<p>Все защищённые эндпоинты (<code>/upload</code>, <code>/ask</code>, <code>/evaluate</code>) будут требовать заголовок:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Authorization</span><span class="o">:</span><span class="w"> </span><span class="n">Bearer</span><span class="w"> </span><span class="n">your</span><span class="o">-</span><span class="n">secret</span><span class="o">-</span><span class="n">api</span><span class="o">-</span><span class="n">key</span>
+</code></pre></div>
+
+<p>Если <code>API_KEY</code> не задан, эндпоинты доступны без аутентификации.</p>
+<h3 id="_6">Рекомендации</h3>
+<ul>
+<li><strong>Никогда не коммитьте <code>.env</code> файл</strong> в репозиторий — он уже в <code>.gitignore</code></li>
+<li>Используйте разные ключи для разработки и продакшена</li>
+<li>Ограничение размера загружаемых файлов: <strong>20 МБ</strong> (настраивается через <code>MAX_FILE_SIZE_MB</code>)</li>
+<li>SSL-верификация GigaChat включена по умолчанию (<code>GIGACHAT_VERIFY_SSL=true</code>)</li>
+</ul>
+<hr />
+<h2 id="api-usage">API Usage</h2>
+<h3 id="health-check">Health Check</h3>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>http://localhost:8000/health
+</code></pre></div>
+
+<p><strong>Ответ:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ok&quot;</span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="pdf">Загрузка PDF</h3>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/upload<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-F<span class="w"> </span><span class="s2">&quot;file=@data/sample_contract.pdf&quot;</span>
+</code></pre></div>
+
+<p><strong>Ответ:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;filename&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sample_contract.pdf&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;chunks&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">47</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;collection_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;contracts&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_7">Вопрос по договору</h3>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/ask<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;question&quot;: &quot;Какая цена договора?&quot;}&#39;</span>
+</code></pre></div>
+
+<p><strong>Ответ:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Цена договора составляет 1 500 000 рублей согласно разделу 3.1.&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sources&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;sample_contract.pdf&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;sample_contract.pdf&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_8">Оценка качества</h3>
+<div class="codehilite"><pre><span></span><code>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/evaluate<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">    &quot;question&quot;: &quot;Какая цена договора?&quot;,</span>
+<span class="s1">    &quot;actual_output&quot;: &quot;Цена составляет 100 000 рублей.&quot;,</span>
+<span class="s1">    &quot;retrieval_context&quot;: [&quot;Цена договора: 100 000 рублей&quot;]</span>
+<span class="s1">  }&#39;</span>
+</code></pre></div>
+
+<p><strong>Ответ:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;faithfulness_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.85</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;faithfulness_reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ответ соответствует контексту&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;answer_relevancy_score&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;answer_relevancy_reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ответ релевантен вопросу&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="swagger">Документация Swagger</h3>
+<p>http://localhost:8000/docs</p>
+<hr />
+<h2 id="_9">Метрики качества</h2>
+<p>Результаты прогона на тестовом наборе (<code>data/eval_questions.json</code>, 8 вопросов):</p>
+<table>
+<thead>
+<tr>
+<th>Метрика</th>
+<th>Среднее</th>
+<th>Мин</th>
+<th>Макс</th>
+<th>Порог</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Faithfulness</strong></td>
+<td>0.87</td>
+<td>0.72</td>
+<td>0.95</td>
+<td>0.7</td>
+<td>✅ PASS</td>
+</tr>
+<tr>
+<td><strong>Answer Relevancy</strong></td>
+<td>0.83</td>
+<td>0.71</td>
+<td>0.92</td>
+<td>0.7</td>
+<td>✅ PASS</td>
+</tr>
+</tbody>
+</table>
+<p><em>Подробные результаты: <code>data/metrics.json</code></em></p>
+<hr />
+<h2 id="_10">Тесты</h2>
+<p>Проект включает <strong>149 тестов</strong> по 8 модулям:</p>
+<div class="codehilite"><pre><span></span><code>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</code></pre></div>
+
+<p>С покрытием:</p>
+<div class="codehilite"><pre><span></span><code>coverage<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+coverage<span class="w"> </span>report
+</code></pre></div>
+
+<table>
+<thead>
+<tr>
+<th>Модуль</th>
+<th>Тестов</th>
+<th>Что покрывает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test_api.py</code></td>
+<td>28</td>
+<td>Все эндпоинты, CORS, OpenAPI</td>
+</tr>
+<tr>
+<td><code>test_security.py</code></td>
+<td>17</td>
+<td>Path traversal, XSS, SQL injection, shell injection, spoofing</td>
+</tr>
+<tr>
+<td><code>test_stability.py</code></td>
+<td>23</td>
+<td>Concurrent access, race conditions, memory growth, resource cleanup</td>
+</tr>
+<tr>
+<td><code>test_ingestion.py</code></td>
+<td>16</td>
+<td>PDF extraction, chunking, embeddings, error handling</td>
+</tr>
+<tr>
+<td><code>test_retrieval.py</code></td>
+<td>16</td>
+<td>BM25Cache, ensemble retriever, hybrid search</td>
+</tr>
+<tr>
+<td><code>test_generation.py</code></td>
+<td>13</td>
+<td>GigaChat mock, prompt building, error handling</td>
+</tr>
+<tr>
+<td><code>test_models.py</code></td>
+<td>17</td>
+<td>Pydantic валидация всех моделей</td>
+</tr>
+<tr>
+<td><code>test_evaluation.py</code></td>
+<td>5</td>
+<td>DeepEval evaluate/batch</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="code-quality">Code Quality</h2>
+<p>Проект следует стандартам качества:</p>
+<ul>
+<li><strong>Форматирование:</strong> Black (line-length=100)</li>
+<li><strong>Импорты:</strong> isort (profile=black)</li>
+<li><strong>Линтинг:</strong> flake8</li>
+<li><strong>Pre-commit:</strong> проверка форматирования, trailing whitespace, YAML, конфликтов слияния</li>
+</ul>
+<p>Установка pre-commit хуков:</p>
+<div class="codehilite"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>pre-commit
+pre-commit<span class="w"> </span>install
+</code></pre></div>
+
+<hr />
+<h2 id="_11">Структура проекта</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">contract</span><span class="o">-</span><span class="n">analyzer</span><span class="o">-</span><span class="n">ai</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="o">.</span><span class="n">github</span><span class="o">/</span><span class="n">workflows</span><span class="o">/</span><span class="n">ci</span><span class="o">.</span><span class="n">yml</span><span class="w">   </span><span class="c1"># GitHub Actions CI</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">app</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">main</span><span class="o">.</span><span class="n">py</span><span class="w">                </span><span class="c1"># FastAPI (upload, ask, evaluate, health)</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">config</span><span class="o">.</span><span class="n">py</span><span class="w">              </span><span class="c1"># Настройки из .env + setup_logging()</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">models</span><span class="o">.</span><span class="n">py</span><span class="w">              </span><span class="c1"># Pydantic схемы (Request/Response)</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">ingestion</span><span class="o">.</span><span class="n">py</span><span class="w">           </span><span class="c1"># PDF → текст → чанкинг → Qdrant</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">retrieval</span><span class="o">.</span><span class="n">py</span><span class="w">           </span><span class="c1"># Гибридный поиск + BM25Cache</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">generation</span><span class="o">.</span><span class="n">py</span><span class="w">          </span><span class="c1"># Промптинг и вызов GigaChat</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">evaluation</span><span class="o">.</span><span class="n">py</span><span class="w">          </span><span class="c1"># DeepEval оценка</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">tests</span><span class="o">/</span><span class="w">                     </span><span class="c1"># 149 тестов</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_api</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_security</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_stability</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_ingestion</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_retrieval</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_generation</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_models</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">test_evaluation</span><span class="o">.</span><span class="n">py</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">frontend</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">streamlit_app</span><span class="o">.</span><span class="n">py</span><span class="w">       </span><span class="c1"># Streamlit-интерфейс</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">utils</span><span class="o">.</span><span class="n">py</span><span class="w">               </span><span class="c1"># API-клиент для бэкенда</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="o">.</span><span class="n">streamlit</span><span class="o">/</span>
+<span class="err">│</span><span class="w">       </span><span class="err">└──</span><span class="w"> </span><span class="n">config</span><span class="o">.</span><span class="n">toml</span><span class="w">        </span><span class="c1"># Настройки Streamlit</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">data</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">sample_contract</span><span class="o">.</span><span class="n">pdf</span><span class="w">    </span><span class="c1"># Тестовый договор</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">eval_questions</span><span class="o">.</span><span class="n">json</span><span class="w">    </span><span class="c1"># Датасет для оценки</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">metrics</span><span class="o">.</span><span class="n">json</span><span class="w">           </span><span class="c1"># Сохранённые метрики</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">docs</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">CHANGELOG</span><span class="o">.</span><span class="n">md</span><span class="w">           </span><span class="c1"># Лог изменений</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">docker</span><span class="o">-</span><span class="n">compose</span><span class="o">.</span><span class="n">yml</span><span class="w">         </span><span class="c1"># Qdrant + app + streamlit</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">Dockerfile</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">Dockerfile</span><span class="o">.</span><span class="n">streamlit</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">requirements</span><span class="o">-</span><span class="n">dev</span><span class="o">.</span><span class="n">txt</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">requirements</span><span class="o">-</span><span class="n">streamlit</span><span class="o">.</span><span class="n">txt</span>
+<span class="err">├──</span><span class="w"> </span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">example</span>
+<span class="err">├──</span><span class="w"> </span><span class="o">.</span><span class="n">pre</span><span class="o">-</span><span class="n">commit</span><span class="o">-</span><span class="n">config</span><span class="o">.</span><span class="n">yaml</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">CONTRIBUTING</span><span class="o">.</span><span class="n">md</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">LICENSE</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">README</span><span class="o">.</span><span class="n">md</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_12">Технологии</h2>
+<ul>
+<li><strong>Python 3.11</strong> — язык разработки</li>
+<li><strong>FastAPI</strong> — REST API (4 эндпоинта)</li>
+<li><strong>Streamlit</strong> — веб-интерфейс</li>
+<li><strong>LangChain</strong> — оркестрация RAG-пайплайна</li>
+<li><strong>Qdrant</strong> — векторная база данных</li>
+<li><strong>HuggingFace Embeddings</strong> — мультиязычные эмбеддинги (E5-large)</li>
+<li><strong>BM25</strong> — лексический поиск с кэшированием (BM25Cache)</li>
+<li><strong>GigaChat</strong> — генерация ответов на русском</li>
+<li><strong>DeepEval</strong> — оценка качества RAG (Faithfulness, Answer Relevancy)</li>
+<li><strong>Docker</strong> — контейнеризация (Qdrant + App)</li>
+</ul>
+<hr />
+<h2 id="_13">Конфигурация</h2>
+<table>
+<thead>
+<tr>
+<th>Переменная</th>
+<th>По умолчанию</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GIGACHAT_CREDENTIALS</code></td>
+<td>—</td>
+<td>Ключ доступа к GigaChat API</td>
+</tr>
+<tr>
+<td><code>GIGACHAT_SCOPE</code></td>
+<td><code>GIGACHAT_API_PERS</code></td>
+<td>Область доступа GigaChat</td>
+</tr>
+<tr>
+<td><code>GIGACHAT_VERIFY_SSL</code></td>
+<td><code>true</code></td>
+<td>SSL верификация (false для dev)</td>
+</tr>
+<tr>
+<td><code>QDRANT_HOST</code></td>
+<td><code>localhost</code></td>
+<td>Хост Qdrant</td>
+</tr>
+<tr>
+<td><code>QDRANT_PORT</code></td>
+<td><code>6333</code></td>
+<td>Порт Qdrant</td>
+</tr>
+<tr>
+<td><code>EMBEDDING_MODEL</code></td>
+<td><code>intfloat/multilingual-e5-large</code></td>
+<td>Модель эмбеддингов</td>
+</tr>
+<tr>
+<td><code>COLLECTION_NAME</code></td>
+<td><code>contracts</code></td>
+<td>Имя коллекции по умолчанию</td>
+</tr>
+<tr>
+<td><code>CHUNK_SIZE</code></td>
+<td><code>1000</code></td>
+<td>Размер чанка (символы)</td>
+</tr>
+<tr>
+<td><code>CHUNK_OVERLAP</code></td>
+<td><code>200</code></td>
+<td>Перекрытие чанков</td>
+</tr>
+<tr>
+<td><code>TOP_K</code></td>
+<td><code>5</code></td>
+<td>Количество результатов поиска</td>
+</tr>
+<tr>
+<td><code>LOG_LEVEL</code></td>
+<td><code>INFO</code></td>
+<td>Уровень логирования</td>
+</tr>
+<tr>
+<td><code>EVAL_MODEL</code></td>
+<td><code>gpt-4o</code></td>
+<td>Модель для DeepEval оценки</td>
+</tr>
+<tr>
+<td><code>API_KEY</code></td>
+<td>—</td>
+<td>API-ключ для аутентификации (опционально)</td>
+</tr>
+<tr>
+<td><code>MAX_FILE_SIZE_MB</code></td>
+<td><code>20</code></td>
+<td>Максимальный размер загружаемого файла (МБ)</td>
+</tr>
+<tr>
+<td><code>BACKEND_URL</code></td>
+<td><code>http://localhost:8000</code></td>
+<td>URL бэкенда для Streamlit</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<hr />
+<h2 id="streamlit">Фронтенд (Streamlit)</h2>
+<p>Веб-интерфейс на Streamlit для демонстрации возможностей сервиса без использования терминала.</p>
+<p><img alt="Streamlit UI" src="https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B" /></p>
+<h3 id="_14">Возможности</h3>
+<ul>
+<li><strong>Drag-and-drop</strong> загрузка PDF-файлов</li>
+<li><strong>Поле вопроса</strong> с кнопкой отправки</li>
+<li><strong>История вопросов и ответов</strong> (session state)</li>
+<li><strong>Индикатор загрузки</strong> при обработке и генерации</li>
+<li><strong>Панель метрик качества</strong> из <code>data/metrics.json</code></li>
+<li><strong>Настройки подключения</strong> к бэкенду (URL, коллекция)</li>
+<li><strong>Проверка здоровья</strong> бэкенда с визуальным статусом</li>
+</ul>
+<h3 id="_15">Скриншот интерфейса</h3>
+<div class="codehilite"><pre><span></span><code><span class="err">┌─────────────────────────────────────────────────────┐</span>
+<span class="err">│</span><span class="w">  </span><span class="err">📄</span><span class="w"> </span><span class="n">Contract</span><span class="w"> </span><span class="n">Analyzer</span><span class="w"> </span><span class="n">AI</span><span class="w">                             </span><span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">Загрузите</span><span class="w"> </span><span class="n">PDF</span><span class="o">-</span><span class="n">договор</span><span class="w"> </span><span class="n">и</span><span class="w"> </span><span class="n">задавайте</span><span class="w"> </span><span class="n">вопросы</span><span class="w">           </span><span class="err">│</span>
+<span class="err">├──────────────────┬──────────────────────────────────┤</span>
+<span class="err">│</span><span class="w"> </span><span class="err">⚙️</span><span class="w"> </span><span class="n">Настройки</span><span class="w">     </span><span class="err">│</span><span class="w"> </span><span class="err">📤</span><span class="w"> </span><span class="n">Загрузка</span><span class="w"> </span><span class="n">договора</span><span class="w">             </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="n">URL</span><span class="w"> </span><span class="n">бэкенда</span><span class="w">      </span><span class="err">│</span><span class="w"> </span><span class="o">[</span><span class="n">Choose PDF file</span><span class="o">]</span><span class="w">                </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="o">[</span><span class="n">localhost:8000</span><span class="o">]</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">📄</span><span class="w"> </span><span class="n">Загрузить</span><span class="w"> </span><span class="n">и</span><span class="w"> </span><span class="n">обработать</span><span class="w">         </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="n">Коллекция</span><span class="w">        </span><span class="err">├──────────────────────────────────┤</span>
+<span class="err">│</span><span class="w"> </span><span class="o">[</span><span class="n">contracts</span><span class="o">]</span><span class="w">      </span><span class="err">│</span><span class="w"> </span><span class="err">💬</span><span class="w"> </span><span class="n">Вопрос</span><span class="w"> </span><span class="n">по</span><span class="w"> </span><span class="n">договору</span><span class="w">             </span><span class="err">│</span>
+<span class="err">├──────────────────┤</span><span class="w"> </span><span class="o">[</span><span class="n">Какая цена договора?</span><span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="n">Спросить</span><span class="o">]</span><span class="w"> </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="err">📊</span><span class="w"> </span><span class="n">Метрики</span><span class="w">       </span><span class="err">├──────────────────────────────────┤</span>
+<span class="err">│</span><span class="w"> </span><span class="n">Faithfulness</span><span class="w"> </span><span class="mf">0.87</span><span class="err">│</span><span class="w"> </span><span class="err">📋</span><span class="w"> </span><span class="n">История</span><span class="w"> </span><span class="n">вопросов</span><span class="w"> </span><span class="n">и</span><span class="w"> </span><span class="n">ответов</span><span class="w">     </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="n">Relevancy</span><span class="w">    </span><span class="mf">0.83</span><span class="err">│</span><span class="w"> </span><span class="n">Вопрос</span><span class="w"> </span><span class="n">#1</span><span class="err">:</span><span class="w"> </span><span class="n">Какая</span><span class="w"> </span><span class="n">цена</span><span class="w"> </span><span class="n">договора</span><span class="vm">?</span><span class="w">  </span><span class="err">│</span>
+<span class="err">├──────────────────┤</span><span class="w"> </span><span class="nl">Ответ</span><span class="p">:</span><span class="w"> </span><span class="n">Цена</span><span class="w"> </span><span class="n">составляет</span><span class="w"> </span><span class="p">...</span><span class="w">       </span><span class="err">│</span>
+<span class="err">│</span><span class="w"> </span><span class="n">Made</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="err">❤️</span><span class="w">     </span><span class="err">│</span><span class="w"> </span><span class="nl">Источники</span><span class="p">:</span><span class="w"> </span><span class="n">sample_contract</span><span class="p">.</span><span class="n">pdf</span><span class="w">   </span><span class="err">│</span>
+<span class="err">└──────────────────┴──────────────────────────────────┘</span>
+</code></pre></div>
+
+<h3 id="_16">Запуск</h3>
+<p>Через Docker (вместе с бэкендом):</p>
+<div class="codehilite"><pre><span></span><code>docker-compose<span class="w"> </span>up<span class="w"> </span>--build
+<span class="c1"># http://localhost:8501</span>
+</code></pre></div>
+
+<p>Локально (фронтенд отдельно):</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>frontend
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>../requirements-streamlit.txt
+streamlit<span class="w"> </span>run<span class="w"> </span>streamlit_app.py
+</code></pre></div>
+
+<h3 id="_17">Конфигурация фронтенда</h3>
+<table>
+<thead>
+<tr>
+<th>Переменная</th>
+<th>По умолчанию</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BACKEND_URL</code></td>
+<td><code>http://localhost:8000</code></td>
+<td>URL бэкенда</td>
+</tr>
+<tr>
+<td><code>API_KEY</code></td>
+<td>—</td>
+<td>API-ключ (если включён на бэкенде)</td>
+</tr>
+<tr>
+<td><code>COLLECTION_NAME</code></td>
+<td><code>contracts</code></td>
+<td>Имя коллекции в Qdrant</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_18">Планы по улучшению</h2>
+<ul>
+<li>[ ] JWT-аутентификация</li>
+<li>[ ] Redis-кэширование частых вопросов</li>
+<li>[x] Streamlit-интерфейс для демонстрации ✅ <code>frontend/</code></li>
+<li>[ ] Поддержка DOCX и других форматов</li>
+<li>[ ] Поддержка DOCX и других форматов</li>
+<li>[ ] CI/CD через GitHub Actions <em>(реализован)</em></li>
+<li>[ ] Публикация статьи на Habr</li>
+<li>[ ] Semantic Chunker (семантический чанкинг вместо RecursiveCharacterTextSplitter)</li>
+</ul>
+<hr />
+<h2 id="_19">Лицензия</h2>
+<p>MIT</p>
+<hr />
+<p>Made with Python, FastAPI, and GigaChat</p>
+</body>
+</html>

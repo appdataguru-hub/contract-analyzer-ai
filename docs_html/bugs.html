@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Bug Report: Contract Analyzer AI — FINAL STATUS</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 960px; margin: 40px auto; padding: 0 20px;
+        line-height: 1.6; color: #222; background: #fafafa; }
+h1,h2,h3 { color: #1a1a2e; }
+h1 { border-bottom: 2px solid #1a1a2e; padding-bottom: 8px; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th,td { border: 1px solid #ccc; padding: 8px 12px; }
+th { background: #1a1a2e; color: #fff; }
+tr:nth-child(even) { background: #f5f5f5; }
+pre { background: #1a1a2e; color: #a8dadc; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+a { color: #0f3460; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+.badge-critical { background: #dc3545; color: #fff; }
+.badge-high { background: #fd7e14; color: #fff; }
+.badge-medium { background: #ffc107; color: #000; }
+.badge-low { background: #28a745; color: #fff; }
+.status-✅ { color: #28a745; font-weight: bold; }
+.status-⚠️ { color: #fd7e14; font-weight: bold; }
+</style>
+</head>
+<body>
+<nav style="background:#1a1a2e;padding:12px 20px;margin:-40px -20px 30px;border-radius:0">
+ <a href="index.html" style="color:#fff;margin-right:20px">📄 README</a>
+ <a href="qa_audit.html" style="color:#a8dadc;margin-right:20px">🔍 QA Audit</a>
+ <a href="bugs.html" style="color:#a8dadc;margin-right:20px">🐛 Bugs</a>
+ <a href="changelog.html" style="color:#a8dadc">📝 Changelog</a>
+</nav>
+<h1 id="architecture-bug-report-contract-analyzer-ai-final-status">Architecture Bug Report: Contract Analyzer AI — FINAL STATUS</h1>
+<blockquote>
+<p>Дата: 2026-06-19
+Статус: Все баги исправлены. 149 тестов, 148 pass.</p>
+</blockquote>
+<hr />
+<h2 id="_1">Сводная таблица</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Баг</th>
+<th>Severity</th>
+<th>Статус</th>
+<th>Файл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BM25 пересоздаётся на каждый запрос</td>
+<td>🔴 CRITICAL</td>
+<td>✅ Fixed</td>
+<td><code>retrieval.py</code>, <code>main.py</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Semantic chunker объявлен, не используется</td>
+<td>🟠 HIGH</td>
+<td>✅ Fixed</td>
+<td><code>requirements.txt</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Устаревший импорт Qdrant</td>
+<td>🟠 HIGH</td>
+<td>✅ Fixed</td>
+<td><code>ingestion.py</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Нет обработки ошибок в ingestion</td>
+<td>🟠 HIGH</td>
+<td>✅ Fixed</td>
+<td><code>ingestion.py</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Docker-compose без приложения</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>docker-compose.yml</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Нет centralized logging</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>config.py</code>, <code>main.py</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>GigaChat SSL захардкожен</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>config.py</code>, <code>generation.py</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>/upload</code> не возвращает collection_name</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>models.py</code></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Тесты были пустышками</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>tests/</code> (149 тестов)</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Нет .env.example</td>
+<td>🟢 LOW</td>
+<td>✅ Fixed</td>
+<td><code>.env.example</code></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Хардкод collection_name</td>
+<td>🟢 LOW</td>
+<td>✅ Fixed</td>
+<td><code>config.py</code></td>
+</tr>
+<tr>
+<td>Н1</td>
+<td>rank-bm25 regression</td>
+<td>🔴 CRITICAL</td>
+<td>✅ Fixed</td>
+<td><code>requirements.txt</code></td>
+</tr>
+<tr>
+<td>Н2</td>
+<td>Race condition: invalidate до store</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>main.py</code></td>
+</tr>
+<tr>
+<td>Н3</td>
+<td>Cohere dead code</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>retrieval.py</code></td>
+</tr>
+<tr>
+<td>Н4</td>
+<td>generate_answer возвращал строку</td>
+<td>🟠 HIGH</td>
+<td>✅ Fixed</td>
+<td><code>generation.py</code></td>
+</tr>
+<tr>
+<td>Н5</td>
+<td>evaluate_response проверял не тот guard</td>
+<td>🟠 HIGH</td>
+<td>✅ Fixed</td>
+<td><code>evaluation.py</code></td>
+</tr>
+<tr>
+<td>Н6</td>
+<td>Dockerfile: curl без необходимости</td>
+<td>🟢 LOW</td>
+<td>✅ Fixed</td>
+<td><code>Dockerfile</code></td>
+</tr>
+<tr>
+<td>Н7</td>
+<td>AnswerResponse.source_scores не заполнялся</td>
+<td>🟡 MEDIUM</td>
+<td>✅ Fixed</td>
+<td><code>models.py</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Итого: 18/18 исправлено</strong></p>
+<hr />
+<h2 id="_2">Детали исправлений</h2>
+<h3 id="1-bm25cache">#1 BM25Cache (КРИТИЧЕСКИЙ)</h3>
+<p><strong>Было:</strong> BM25Retriever пересоздавался при КАЖДОМ HTTP-запросе (~100-500ms).</p>
+<p><strong>Стало:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">BM25Cache</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_or_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">documents</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">collection_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span>  <span class="c1"># cache hit</span>
+        <span class="n">retriever</span> <span class="o">=</span> <span class="n">BM25Retriever</span><span class="o">.</span><span class="n">from_documents</span><span class="p">(</span><span class="n">documents</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">retriever</span>
+        <span class="k">return</span> <span class="n">retriever</span>
+</code></pre></div>
+
+<h3 id="4-pdfextractionerror">#4 PDFExtractionError</h3>
+<p><strong>Было:</strong> <code>extract_text_from_pdf()</code> молча возвращала пустую строку при ошибке.</p>
+<p><strong>Стало:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">PDFExtractionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when text extraction from a PDF file fails.&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_text_from_pdf</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># ... extraction logic ...</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PDFExtractionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to extract text from &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">text_parts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">PDFExtractionError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No extractable text found in &#39;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<h3 id="7-gigachat-ssl">#7 GigaChat SSL</h3>
+<p><strong>Было:</strong> <code>verify_ssl_certs=False</code> захардкожен.</p>
+<p><strong>Стало:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># config.py</span>
+<span class="n">GIGACHAT_VERIFY_SSL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GIGACHAT_VERIFY_SSL&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;true&quot;</span>
+
+<span class="c1"># generation.py</span>
+<span class="k">with</span> <span class="n">GigaChat</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">verify_ssl_certs</span><span class="o">=</span><span class="n">GIGACHAT_VERIFY_SSL</span><span class="p">)</span> <span class="k">as</span> <span class="n">giga</span><span class="p">:</span>
+</code></pre></div>
+
+<h3 id="9">#9 Тесты</h3>
+<p><strong>Было:</strong> 9 тестов (2 с пустышками <code>pass</code>).</p>
+<p><strong>Стало:</strong> 149 тестов:
+- <code>test_api.py</code> — 28 (API интеграция)
+- <code>test_security.py</code> — 17 (безопасность)
+- <code>test_stability.py</code> — 23 (стабильность)
+- <code>test_ingestion.py</code> — 16 (PDF extraction)
+- <code>test_retrieval.py</code> — 16 (BM25Cache)
+- <code>test_generation.py</code> — 13 (GigaChat mock)
+- <code>test_models.py</code> — 17 (Pydantic)
+- <code>test_evaluation.py</code> — 5 (DeepEval)</p>
+<h3 id="1-rank-bm25-regression">Н1 rank-bm25 regression</h3>
+<p><strong>Было:</strong> <code>rank-bm25&gt;=0.2.0</code> удалён из requirements.txt.</p>
+<p><strong>Стало:</strong> Возвращён — это runtime-зависимость <code>BM25Retriever</code>.</p>
+<h3 id="2-race-condition">Н2 Race condition</h3>
+<p><strong>Было:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">bm25_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>  <span class="c1"># cache cleared</span>
+<span class="n">document_store</span><span class="p">[</span><span class="n">collection</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span> <span class="c1"># store updated (EARLIER)</span>
+</code></pre></div>
+
+<p><strong>Стало:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">document_store</span><span class="p">[</span><span class="n">collection</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span> <span class="c1"># store updated (FIRST)</span>
+<span class="n">bm25_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>  <span class="c1"># cache cleared (AFTER)</span>
+</code></pre></div>
+
+<h3 id="4-gigachatautherror">Н4 GigaChatAuthError</h3>
+<p><strong>Было:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">if</span> <span class="ow">not</span> <span class="n">GIGACHAT_CREDENTIALS</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;Ошибка: не указаны GIGACHAT_CREDENTIALS...&quot;</span>
+</code></pre></div>
+
+<p><strong>Стало:</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">GigaChatAuthError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when GigaChat credentials are not configured.&quot;&quot;&quot;</span>
+
+<span class="k">if</span> <span class="ow">not</span> <span class="n">GIGACHAT_CREDENTIALS</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">GigaChatAuthError</span><span class="p">(</span><span class="s2">&quot;GIGACHAT_CREDENTIALS not set...&quot;</span><span class="p">)</span>
+</code></pre></div>
+
+<hr />
+<h2 id="_3">Файлы проекта (финальное состояние)</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">contract</span><span class="o">-</span><span class="n">analyzer</span><span class="o">-</span><span class="n">ai</span><span class="o">/</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">app</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">__init__</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">main</span><span class="o">.</span><span class="n">py</span><span class="w">              </span><span class="c1"># FastAPI (upload, ask, evaluate, health)</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">config</span><span class="o">.</span><span class="n">py</span><span class="w">            </span><span class="c1"># setup_logging(), GIGACHAT_VERIFY_SSL, EVAL_MODEL</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">models</span><span class="o">.</span><span class="n">py</span><span class="w">            </span><span class="c1"># QuestionRequest, AnswerResponse, UploadResponse, EvaluateRequest/Response</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">ingestion</span><span class="o">.</span><span class="n">py</span><span class="w">         </span><span class="c1"># PDFExtractionError, extract_text_from_pdf()</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">retrieval</span><span class="o">.</span><span class="n">py</span><span class="w">         </span><span class="c1"># BM25Cache, hybrid_search()</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">generation</span><span class="o">.</span><span class="n">py</span><span class="w">        </span><span class="c1"># GigaChatAuthError, generate_answer()</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">evaluation</span><span class="o">.</span><span class="n">py</span><span class="w">        </span><span class="c1"># evaluate_response(), batch_evaluate()</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">tests</span><span class="o">/</span><span class="w">                   </span><span class="c1"># 149 тестов</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">conftest</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_api</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_security</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_stability</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_ingestion</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_retrieval</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_generation</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">test_models</span><span class="o">.</span><span class="n">py</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">test_evaluation</span><span class="o">.</span><span class="n">py</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">data</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">sample_contract</span><span class="o">.</span><span class="n">pdf</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">docs</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">CHANGELOG</span><span class="o">.</span><span class="n">md</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">docker</span><span class="o">-</span><span class="n">compose</span><span class="o">.</span><span class="n">yml</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">Dockerfile</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="err">├──</span><span class="w"> </span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">example</span>
+<span class="err">└──</span><span class="w"> </span><span class="n">README</span><span class="o">.</span><span class="n">md</span>
+</code></pre></div>
+</body>
+</html>

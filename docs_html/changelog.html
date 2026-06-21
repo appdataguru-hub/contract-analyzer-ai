@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        max-width: 960px; margin: 40px auto; padding: 0 20px;
+        line-height: 1.6; color: #222; background: #fafafa; }
+h1,h2,h3 { color: #1a1a2e; }
+h1 { border-bottom: 2px solid #1a1a2e; padding-bottom: 8px; }
+table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+th,td { border: 1px solid #ccc; padding: 8px 12px; }
+th { background: #1a1a2e; color: #fff; }
+tr:nth-child(even) { background: #f5f5f5; }
+pre { background: #1a1a2e; color: #a8dadc; padding: 16px; border-radius: 8px; overflow-x: auto; }
+code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+a { color: #0f3460; text-decoration: none; }
+a:hover { text-decoration: underline; }
+hr { border: none; border-top: 1px solid #ddd; margin: 2em 0; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+.badge-critical { background: #dc3545; color: #fff; }
+.badge-high { background: #fd7e14; color: #fff; }
+.badge-medium { background: #ffc107; color: #000; }
+.badge-low { background: #28a745; color: #fff; }
+.status-✅ { color: #28a745; font-weight: bold; }
+.status-⚠️ { color: #fd7e14; font-weight: bold; }
+</style>
+</head>
+<body>
+<nav style="background:#1a1a2e;padding:12px 20px;margin:-40px -20px 30px;border-radius:0">
+ <a href="index.html" style="color:#fff;margin-right:20px">📄 README</a>
+ <a href="qa_audit.html" style="color:#a8dadc;margin-right:20px">🔍 QA Audit</a>
+ <a href="bugs.html" style="color:#a8dadc;margin-right:20px">🐛 Bugs</a>
+ <a href="changelog.html" style="color:#a8dadc">📝 Changelog</a>
+</nav>
+<h1 id="changelog">Changelog</h1>
+<h2 id="2026-06-19-3-deep-qa-security-stability-149">2026-06-19 — Итерация 3: Deep QA + Security + Stability (149 тестов)</h2>
+<h3 id="_1">Добавлено</h3>
+<table>
+<thead>
+<tr>
+<th>Компонент</th>
+<th>Описание</th>
+<th>Файлы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Security tests</td>
+<td>17 тестов: path traversal, XSS, SQL injection, shell injection, null bytes, content-type spoofing, malformed multipart</td>
+<td><code>tests/test_security.py</code></td>
+</tr>
+<tr>
+<td>Stability tests</td>
+<td>23 теста: concurrent access, race conditions, memory growth, resource cleanup, edge cases</td>
+<td><code>tests/test_stability.py</code></td>
+</tr>
+<tr>
+<td>API integration tests</td>
+<td>28 тестов: все эндпоинты, CORS, OpenAPI schema</td>
+<td><code>tests/test_api.py</code></td>
+</tr>
+<tr>
+<td>Model validation tests</td>
+<td>17 тестов: Pydantic валидация всех моделей</td>
+<td><code>tests/test_models.py</code></td>
+</tr>
+<tr>
+<td>Evaluation tests</td>
+<td>5 тестов: DeepEval evaluate/batch</td>
+<td><code>tests/test_evaluation.py</code></td>
+</tr>
+<tr>
+<td>conftest.py</td>
+<td>Fixtures: PDF generation, Qdrant/GigaChat mocks, document store cleanup</td>
+<td><code>tests/conftest.py</code></td>
+</tr>
+<tr>
+<td>sample_contract.pdf</td>
+<td>Тестовый договор для ручного тестирования</td>
+<td><code>data/sample_contract.pdf</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_2">Исправлено</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Проблема</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>generate_answer</code> возвращал error-строку вместо raise</td>
+<td><code>GigaChatAuthError</code> exception</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>evaluate_response</code> проверял <code>GIGACHAT_CREDENTIALS</code> хотя использует gpt-4o</td>
+<td>Убран неверный guard</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>QuestionRequest.collection_name</code> hardcoded <code>"contracts"</code></td>
+<td>Заменён на <code>COLLECTION_NAME</code> из config</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>Dockerfile</code> устанавливал <code>curl</code> без необходимости</td>
+<td>Удалён <code>apt-get install curl</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>AnswerResponse.source_scores</code> в модели, но не заполнялся</td>
+<td>Удалён из модели</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2026-06-19-2-senior-qa-review-hermes-fixes">2026-06-19 — Итерация 2: Senior QA review + hermes fixes</h2>
+<h3 id="hermes-architecture_bugsmd">Hermes — Исправления багов из ARCHITECTURE_BUGS.md</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Баг</th>
+<th>Статус</th>
+<th>Коммит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BM25 пересоздаётся на каждый запрос</td>
+<td>✅ Fixed</td>
+<td><code>BM25Cache</code> (get_or_build / invalidate)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Нет обработки ошибок в ingestion</td>
+<td>✅ Fixed</td>
+<td><code>PDFExtractionError</code>, try/except</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Нет логгирования</td>
+<td>✅ Fixed</td>
+<td><code>setup_logging()</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>GigaChat SSL verify=False намертво</td>
+<td>✅ Fixed</td>
+<td><code>GIGACHAT_VERIFY_SSL</code> env</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Пустые тесты</td>
+<td>✅ Fixed</td>
+<td>4 новых теста PDF extraction</td>
+</tr>
+<tr>
+<td>10</td>
+<td>.env.example без документации</td>
+<td>✅ Fixed</td>
+<td>+3 новых параметра</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Semantic Chunker</td>
+<td>❌ Not fixed</td>
+<td>Ещё RecursiveCharacterTextSplitter</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Hardcoded collection_name</td>
+<td>❌ Not fixed</td>
+<td>Default <code>"contracts"</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Qdrant Import Path</td>
+<td>✅ Already OK</td>
+<td>Использовался langchain_qdrant</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Docker Compose app</td>
+<td>✅ Already OK</td>
+<td>Был добавлен ранее</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Upload Response fields</td>
+<td>✅ Already OK</td>
+<td>collection_name возвращался</td>
+</tr>
+</tbody>
+</table>
+<h3 id="senior-qa">Senior QA — Найденные проблемы и исправления</h3>
+<h4 id="regression-rank-bm25-requirementstxt">REGRESSION: <code>rank-bm25</code> удалён из requirements.txt</h4>
+<p>Hermes удалил зависимость <code>rank-bm25&gt;=0.2.0</code> из requirements.txt. Пакет <code>rank_bm25</code> — runtime-зависимость <code>BM25Retriever</code> из <code>langchain_community</code>. Без него при чистой установке (<code>pip install -r requirements.txt</code>) BM25 упадёт с <code>ImportError</code>.</p>
+<p><strong>Fix:</strong> <code>rank-bm25&gt;=0.2.0</code> возвращён в requirements.txt.</p>
+<p><strong>Обоснование:</strong> Нельзя полагаться на то, что пакет уже установлен в окружении. Каждая зависимость должна быть явно указана для воспроизводимости.</p>
+<hr />
+<h4 id="nit-race-condition-upload-invalidate-store">NIT: Race condition в upload — invalidate до store</h4>
+<div class="codehilite"><pre><span></span><code><span class="c1"># main.py — upload endpoint (было)</span>
+<span class="n">load_pdf_bytes_to_store</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>       <span class="c1"># 1. Qdrant updated</span>
+<span class="n">bm25_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>  <span class="c1"># 2. cache cleared</span>
+<span class="n">document_store</span><span class="p">[</span><span class="n">collection</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span> <span class="c1"># 3. store updated</span>
+</code></pre></div>
+
+<p>Если <code>/ask</code> приходит между (2) и (3), <code>BM25Cache.get_or_build()</code> получит <code>documents</code> из <code>document_store[collection]</code>, которые ещё не обновлены -&gt; BM25 будет перестроен со <em>старыми</em> документами.</p>
+<p><strong>Fix:</strong> <code>bm25_cache.invalidate()</code> перенесён после <code>document_store[collection] =</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">load_pdf_bytes_to_store</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>       <span class="c1"># 1. Qdrant updated</span>
+<span class="n">document_store</span><span class="p">[</span><span class="n">collection</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span> <span class="c1"># 2. store updated</span>
+<span class="n">bm25_cache</span><span class="o">.</span><span class="n">invalidate</span><span class="p">(</span><span class="n">collection</span><span class="p">)</span>  <span class="c1"># 3. cache cleared</span>
+</code></pre></div>
+
+<p>Теперь при запросе между (2) и (3) документы уже актуальны, а при обращении после (3) BM25 перестроится с новыми документами.</p>
+<hr />
+<h3 id="senior-qa_1">Senior QA — Атомарные проверки (все модули, все граничные случаи)</h3>
+<p><strong>Ingestion:</strong>
+- ✅ <code>extract_text_from_pdf_bytes(b'')</code> → <code>PDFExtractionError</code>
+- ✅ <code>extract_text_from_pdf('/nonexistent')</code> → <code>PDFExtractionError</code>
+- ✅ <code>chunk_documents('', 100, 0)</code> → <code>[]</code>
+- ✅ <code>chunk_documents('x'*1500, 500, 50)</code> → корректный сплит
+- ✅ <code>create_document_chunks('')</code> → <code>[]</code>
+- ✅ <code>create_document_chunks('T', source='f.pdf')</code> → metadata корректна</p>
+<p><strong>Retrieval:</strong>
+- ✅ <code>BM25Cache</code> — cache hit возвращает тот же объект
+- ✅ <code>BM25Cache</code> — cache hit обновляет <code>k</code> на новый
+- ✅ <code>BM25Cache</code> — invalidate удаляет, следующий get_or_build создаёт новый
+- ✅ <code>BM25Cache</code> — мультиколлекции не пересекаются
+- ✅ <code>BM25Cache</code> — invalidate несуществующей коллекции не крашится
+- ✅ <code>BM25Cache</code> — реальный поиск по русскому тексту работает
+- ✅ <code>bm25_cache</code> синглтон существует</p>
+<p><strong>Generation:</strong>
+- ✅ <code>build_prompt('', 'ctx')</code> — пустой вопрос не ломает
+- ✅ <code>build_prompt('q', '')</code> — пустой контекст не ломает
+- ✅ <code>build_prompt('q', 'Line1\nLine2')</code> — мультилайн
+- ✅ <code>generate_answer</code> без credentials → <code>GigaChatAuthError</code> (не строка)</p>
+<p><strong>API Models:</strong>
+- ✅ <code>QuestionRequest(question='?')</code> → <code>collection_name</code> из конфига
+- ✅ <code>AnswerResponse.source_scores</code> — нет (удалён)
+- ✅ Все Pydantic поля корректны</p>
+<p><strong>Config:</strong>
+- ✅ Все типы корректны (str, int, bool)
+- ✅ <code>setup_logging('invalid')</code> → fallback на INFO
+- ✅ <code>GIGACHAT_VERIFY_SSL</code> по умолчанию <code>True</code></p>
+<p><strong>Dockerfile:</strong>
+- ✅ Нет <code>curl</code>, нет <code>apt-get</code>, минимальный слой</p>
+<p><strong>Интеграция:</strong>
+- ✅ <code>from app.main import app</code> — все модули грузятся
+- ✅ <code>from app.retrieval import bm25_cache</code> — синглтон доступен</p>
+<hr />
+<h2 id="2026-06-19-1">2026-06-19 — Итерация 1: Начальная реализация</h2>
+<h3 id="_3">Реализовано</h3>
+<ul>
+<li>FastAPI приложение с эндпоинтами <code>/upload</code>, <code>/ask</code>, <code>/health</code></li>
+<li>Ingestion pipeline: pdfplumber → RecursiveCharacterTextSplitter → Qdrant</li>
+<li>Hybrid retrieval: EnsembleRetriever (Vector + BM25)</li>
+<li>GigaChat интеграция для генерации ответов</li>
+<li>DeepEval оценка качества (Faithfulness, Answer Relevancy)</li>
+<li>Docker-compose: Qdrant + App</li>
+<li>Базовые тесты (9 тестов)</li>
+</ul>
+</body>
+</html>

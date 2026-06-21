@@ -1,6 +1,7 @@
+import logging
+import threading
 import tempfile
 import os
-from typing import Optional
 
 import pdfplumber
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -14,37 +15,60 @@ from app.config import (
     QDRANT_PORT,
     CHUNK_SIZE,
     CHUNK_OVERLAP,
+    QDRANT_FORCE_RECREATE,
 )
 
+logger = logging.getLogger(__name__)
 
-_embeddings: Optional[HuggingFaceEmbeddings] = None
+
+class PDFExtractionError(Exception):
+    """Raised when text extraction from a PDF file fails."""
+
+
+_embeddings_lock = threading.Lock()
+_embeddings: HuggingFaceEmbeddings | None = None
 
 
 def get_embeddings() -> HuggingFaceEmbeddings:
+    """Return a process-wide singleton embedding model (thread-safe).
+
+    Without the lock, concurrent first calls could each instantiate
+    HuggingFaceEmbeddings, downloading/caching the model N times.
+    """
     global _embeddings
     if _embeddings is None:
-        _embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        with _embeddings_lock:
+            if _embeddings is None:  # double-check under the lock
+                _embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
     return _embeddings
 
 
 def extract_text_from_pdf(file_path: str) -> str:
     text_parts: list[str] = []
-    with pdfplumber.open(file_path) as pdf:
-        for page_num, page in enumerate(pdf.pages, start=1):
-            page_text = page.extract_text()
-            if page_text and page_text.strip():
-                text_parts.append(f"[Страница {page_num}]\n{page_text}")
+    try:
+        with pdfplumber.open(file_path) as pdf:
+            for page_num, page in enumerate(pdf.pages, start=1):
+                page_text = page.extract_text()
+                if page_text and page_text.strip():
+                    text_parts.append(f"[Страница {page_num}]\n{page_text}")
+    except Exception as e:
+        raise PDFExtractionError(f"Failed to extract text from '{file_path}': {e}") from e
+    if not text_parts:
+        raise PDFExtractionError(f"No extractable text found in '{file_path}'")
     return "\n\n".join(text_parts)
 
 
 def extract_text_from_pdf_bytes(content: bytes) -> str:
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(content)
-        tmp_path = tmp.name
-    try:
+    if not content:
+        raise PDFExtractionError("Empty PDF content provided")
+    # Use TemporaryDirectory context manager — auto-cleans on exception or
+    # interpreter shutdown. The previous NamedTemporaryFile(delete=False) +
+    # manual os.unlink pattern leaks files on SIGKILL or uncaught exceptions.
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = os.path.join(tmpdir, "upload.pdf")
+        with open(tmp_path, "wb") as tmp:
+            tmp.write(content)
         return extract_text_from_pdf(tmp_path)
-    finally:
-        os.unlink(tmp_path)
 
 
 def chunk_documents(
@@ -93,7 +117,12 @@ def create_vector_store(
         url=f"http://{QDRANT_HOST}:{QDRANT_PORT}",
         collection_name=collection_name,
         prefer_grpc=False,
-        force_recreate=True,
+        # BEHAVIOR: When QDRANT_FORCE_RECREATE is true (default) the collection
+        # is dropped on every upload — the upload endpoint relies on consumers
+        # providing unique collection names to keep multiple documents. Set
+        # QDRANT_FORCE_RECREATE=false to switch to append-only mode for
+        # multi-document collections.
+        force_recreate=QDRANT_FORCE_RECREATE,
     )
     return vector_store
 

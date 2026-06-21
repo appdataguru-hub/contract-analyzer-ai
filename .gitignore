@@ -1,10 +1,10 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 .env
 qdrant_storage/
-data/*.pdf
-data/*.txt
+data/sample_contract.pdf
 *.egg-info/
 .tox/
 .pytest_cache/

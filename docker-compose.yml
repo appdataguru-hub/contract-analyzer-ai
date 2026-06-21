@@ -13,10 +13,11 @@ services:
       - QDRANT__SERVICE__HTTP_PORT=6333
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "curl", "-sf", "http://localhost:6333/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   app:
     build: .
@@ -29,7 +30,24 @@ services:
       - QDRANT_PORT=6333
     depends_on:
       qdrant:
-        condition: service_healthy
+        condition: service_started
     volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://176.108.252.198:8000
+      - API_KEY=${API_KEY}
+      - COLLECTION_NAME=${COLLECTION_NAME:-contracts}
+    depends_on:
+      - app
+    volumes:
+      - ./frontend:/app/frontend
       - ./data:/app/data
     restart: unless-stopped
