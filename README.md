@@ -51,11 +51,13 @@
 
 ```mermaid
 flowchart TB
-    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef storage fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef metrics fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef client fill:#fce4ec,stroke:#b71c1c,stroke-width:2px
+flowchart TB
+    classDef frontend fill:#eef2f7,stroke:#4a5568,stroke-width:1.5px
+    classDef backend fill:#edf2f7,stroke:#4a5568,stroke-width:1.5px
+    classDef storage fill:#e2e8f0,stroke:#4a5568,stroke-width:1.5px
+    classDef metrics fill:#e2e8f0,stroke:#4a5568,stroke-width:1.5px
+    classDef client fill:#f7fafc,stroke:#4a5568,stroke-width:1.5px
+    classDef llm fill:#eef2f7,stroke:#4a5568,stroke-width:1.5px
 
     subgraph Client["👤 Клиент"]
         Browser["🌐 Браузер / curl"]
