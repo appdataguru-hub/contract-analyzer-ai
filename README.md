@@ -1,37 +1,31 @@
 # Contract Analyzer AI
 
-![Python Version](https://img.shields.io/badge/python-3.11-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Docker](https://img.shields.io/badge/docker-ready-2496ED)
-![CI](https://img.shields.io/badge/CI-passing-brightgreen)
-![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)
-![DeepEval](https://img.shields.io/badge/DeepEval-live-8A2BE2)
-[![Demo](https://img.shields.io/badge/demo-online-brightgreen?style=for-the-badge)](http://176.108.252.198:8501)
-[![API Docs](https://img.shields.io/badge/API-Docs-blue?style=for-the-badge)](http://176.108.252.198:8000/docs)
+[![Python Version](https://img.shields.io/badge/python-3.11-blue)]()
+[![License](https://img.shields.io/badge/license-MIT-green)]()
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED)]()
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen)]()
+[![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)]()
 
-**Анализатор договоров на базе гибридного RAG и GigaChat**
+**Contract Analyzer AI** — hybrid RAG-based service for PDF contract analysis with Russian-language support via GigaChat.
 
-Сервис для загрузки PDF-документов (договоров, контрактов) и получения ответов на вопросы по их содержанию. Использует современный стек AI/ML: гибридный retrieval (векторный + BM25 с кэшированием), генерацию ответов через GigaChat и живую оценку качества каждого ответа через DeepEval (или встроенный GigaChat-оценщик).
+Upload PDF contracts, ask questions in natural language, and get AI-generated answers with real-time quality scoring (Faithfulness + Answer Relevancy). Built with FastAPI, Qdrant, LangChain, and GigaChat.
 
-> 📋 **Полный отчёт QA-аудита:** см. [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md) — 11 найденных и исправленных багов, архитектурные улучшения, тестовая статистика.
+> 📋 **Full QA audit report:** [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md) — 11 bugs found & fixed, architecture improvements, test statistics.
 
 ---
 
-## 🌐 Демо
+## 🚀 Quick Start
 
-Проект доступен для тестирования по адресу:
-
-**[http://176.108.252.198:8501](http://176.108.252.198:8501)**
-
-- **Фронтенд (Streamlit)** — загружайте PDF и задавайте вопросы через веб-интерфейс
-- **Бэкенд API**: `http://176.108.252.198:8000`
-- **Swagger-документация**: [http://176.108.252.198:8000/docs](http://176.108.252.198:8000/docs)
-
-⚠️ **Внимание:** Демо развёрнуто на тестовой VM и может быть недоступно в случае остановки сервера. Для локального запуска используйте [инструкцию по установке](#быстрый-старт).
+```bash
+docker-compose up --build
+# Backend: http://localhost:8000
+# Swagger UI: http://localhost:8000/docs
+# Frontend: http://localhost:8501
+```
 
 ---
 
-## Архитектура
+## Architecture
 
 ```
                          ┌─────────────────────────────────────┐
@@ -66,7 +60,7 @@
                          └─────────────────────────────────────┘
 ```
 
-### Компоненты
+### Components
 
 | Компонент | Технология | Назначение |
 |-----------|-----------|-----------|
@@ -83,88 +77,83 @@
 
 ---
 
-## Быстрый старт
+## 📋 Prerequisites
 
-### 1. Клонирование и настройка
+- Python 3.11+
+- Docker & Docker Compose (recommended)
+- GigaChat API credentials ([Sber GigaChat](https://developers.sber.ru/gigachat))
+- (Optional) OpenAI API key for DeepEval metrics
+
+## 🔧 Installation & Setup
+
+### Option A: Docker (recommended)
 
 ```bash
-git clone https://github.com/your-username/contract-analyzer-ai.git
+# 1. Clone
+git clone https://github.com/appdataguru-hub/contract-analyzer-ai.git
 cd contract-analyzer-ai
-python -m venv venv
-source venv/bin/activate
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env: set GIGACHAT_CREDENTIALS
+
+# 3. Launch
+docker-compose up --build
+# Backend: http://localhost:8000
+# Frontend: http://localhost:8501
+# Swagger: http://localhost:8000/docs
+```
+
+### Option B: Local development
+
+```bash
+# 1. Clone & setup venv
+git clone https://github.com/appdataguru-hub/contract-analyzer-ai.git
+cd contract-analyzer-ai
+python -m venv .venv && source .venv/bin/activate
+
+# 2. Install dependencies
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
-```
 
-### 2. Настройка переменных окружения
-
-```bash
+# 3. Configure
 cp .env.example .env
-# Отредактируйте .env:
-# - GIGACHAT_CREDENTIALS: ваш ключ доступа к GigaChat
-# - OPENAI_API_KEY: для DeepEval оценки (опционально, без неё метрики не считаются)
-# - GIGACHAT_VERIFY_SSL: true (prod) / false (dev)
-# - API_KEY: опциональный ключ для аутентификации API
-# - LOG_LEVEL: INFO / DEBUG
-```
+# Set GIGACHAT_CREDENTIALS in .env
 
-### 3. Запуск через Docker (рекомендуется)
-
-```bash
-docker-compose up --build
-# Сервис будет доступен на http://localhost:8000
-# Swagger UI: http://localhost:8000/docs
-```
-
-### 4. Запуск с фронтендом (Streamlit)
-
-```bash
-docker-compose up --build
-# Бэкенд: http://localhost:8000
-# Фронтенд: http://localhost:8501
-# Swagger UI: http://localhost:8000/docs
-```
-
-### 5. Локальный запуск (без Docker)
-
-```bash
+# 4. Start Qdrant + app
 docker-compose up -d qdrant
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
 
-### 6. Запуск фронтенда отдельно
-
-```bash
-cd frontend
-streamlit run streamlit_app.py
+# 5. (Optional) Streamlit frontend
+cd frontend && streamlit run streamlit_app.py
 ```
 
 ---
 
-## Безопасность
+## Security
 
-### API-аутентификация (опционально)
+### API Authentication (optional)
 
-Установите `API_KEY` в `.env` для включения проверки Bearer-токена:
+Set `API_KEY` in `.env` to enable Bearer token verification:
 
 ```
 API_KEY=your-secret-api-key
 ```
 
-Все защищённые эндпоинты (`/upload`, `/ask`, `/evaluate`) будут требовать заголовок:
+Protected endpoints (`/upload`, `/ask`, `/evaluate`) will require:
 
 ```
 Authorization: Bearer your-secret-api-key
 ```
 
-Если `API_KEY` не задан, эндпоинты доступны без аутентификации.
+If `API_KEY` is empty, endpoints are accessible without authentication.
 
-### Рекомендации
+### Recommendations
 
-- **Никогда не коммитьте `.env` файл** в репозиторий — он уже в `.gitignore`
-- Используйте разные ключи для разработки и продакшена
-- Ограничение размера загружаемых файлов: **20 МБ** (настраивается через `MAX_FILE_SIZE_MB`)
-- SSL-верификация GigaChat включена по умолчанию (`GIGACHAT_VERIFY_SSL=true`)
+- **Never commit `.env`** to the repository — it's already in `.gitignore`
+- Use different keys for development and production
+- File upload size limit: **20 MB** (configurable via `MAX_FILE_SIZE_MB`)
+- GigaChat SSL verification enabled by default (`GIGACHAT_VERIFY_SSL=true`)
 
 ---
 
@@ -176,19 +165,19 @@ Authorization: Bearer your-secret-api-key
 curl http://localhost:8000/health
 ```
 
-**Ответ:**
+**Response:**
 ```json
 {"status": "ok"}
 ```
 
-### Загрузка PDF
+### Upload PDF
 
 ```bash
 curl -X POST http://localhost:8000/upload \
   -F "file=@data/sample_contract.pdf"
 ```
 
-**Ответ:**
+**Response:**
 ```json
 {
   "status": "success",
@@ -198,9 +187,9 @@ curl -X POST http://localhost:8000/upload \
 }
 ```
 
-### Вопрос по договору (с авто-оценкой)
+### Ask a Question (with auto-evaluation)
 
-При каждом ответе система автоматически оценивает его качество через DeepEval. Если `OPENAI_API_KEY` не задан, поля оценки возвращаются как `null`.
+Each answer is automatically quality-scored. If `OPENAI_API_KEY` is not set, evaluation fields return as `null`.
 
 ```bash
 curl -X POST http://localhost:8000/ask \
@@ -208,7 +197,7 @@ curl -X POST http://localhost:8000/ask \
   -d '{"question": "Какая цена договора?"}'
 ```
 
-**Ответ:**
+**Response:**
 ```json
 {
   "answer": "Цена договора составляет 1 500 000 рублей согласно разделу 3.1.",
@@ -220,15 +209,15 @@ curl -X POST http://localhost:8000/ask \
 }
 ```
 
-### Живые метрики (агрегированные)
+### Live Metrics (aggregated)
 
-Агрегированные метрики по всем ответам за текущую сессию:
+Aggregated metrics across all answers in the current session:
 
 ```bash
 curl http://localhost:8000/metrics
 ```
 
-**Ответ:**
+**Response:**
 ```json
 {
   "total_evaluations": 5,
@@ -245,9 +234,9 @@ curl http://localhost:8000/metrics
 }
 ```
 
-### Оценка качества (отдельный эндпоинт)
+### Manual Evaluation (standalone endpoint)
 
-Для ручной оценки произвольной пары вопрос-ответ:
+For manual evaluation of arbitrary question-answer pairs:
 
 ```bash
 curl -X POST http://localhost:8000/evaluate \
@@ -259,7 +248,7 @@ curl -X POST http://localhost:8000/evaluate \
   }'
 ```
 
-**Ответ:**
+**Response:**
 ```json
 {
   "faithfulness_score": 0.85,
@@ -269,82 +258,82 @@ curl -X POST http://localhost:8000/evaluate \
 }
 ```
 
-### Документация Swagger
+### Swagger Documentation
 
 http://localhost:8000/docs
 
 ---
 
-## Метрики качества
+## Quality Metrics
 
-### Живые метрики (Live Metrics)
+### Live Quality Metrics
 
-Система автоматически оценивает **каждый** ответ по двум метрикам DeepEval:
+Every answer is automatically evaluated on two metrics:
 
-| Метрика | Что измеряет | Порог |
-|---------|-------------|-------|
-| **Faithfulness** | Насколько ответ соответствует контексту документа | ≥ 0.7 |
-| **Answer Relevancy** | Насколько ответ релевантен заданному вопросу | ≥ 0.7 |
+| Metric | Description | Threshold |
+|--------|-------------|-----------|
+| **Faithfulness** | How well the answer aligns with the document context | ≥ 0.7 |
+| **Answer Relevancy** | How relevant the answer is to the question | ≥ 0.7 |
 
-Оценки накапливаются в памяти сервера и доступны агрегированно через `GET /metrics`.
+Scores accumulate in-memory and are available via `GET /metrics`.
 
-В интерфейсе Streamlit:
-- **Сайдбар** — средние значения по всем ответам с PASS/FAIL и min/max
-- **Каждый ответ** — индивидуальные оценки с цветным индикатором (🟢 ≥ 0.7 / 🔴 < 0.7)
+In the Streamlit UI:
+- **Sidebar** — aggregated averages with PASS/FAIL and min/max
+- **Per-answer** — individual scores with color indicators (🟢 ≥ 0.7 / 🔴 < 0.7)
 
-> **Бэкенд оценки выбирается автоматически:** если доступен GigaChat (указан `GIGACHAT_CREDENTIALS`), метрики считаются через него. Если GigaChat недоступен, система пробует DeepEval (требуется `OPENAI_API_KEY`). Можно принудительно задать `EVAL_BACKEND=gigachat` или `EVAL_BACKEND=deepeval` в `.env`. Без обоих ключей ответы приходят без оценки.
+> **Auto backend selection:** If GigaChat is available (`GIGACHAT_CREDENTIALS` set), metrics use it. Otherwise falls back to DeepEval (requires `OPENAI_API_KEY`). Set `EVAL_BACKEND=gigachat` or `EVAL_BACKEND=deepeval` to force a specific backend.
 
 ### Результаты прогона на тестовом наборе
 
-Тестовый прогон на 8 вопросах из `data/eval_questions.json`:
+Benchmark results on 8 questions from `data/eval_questions.json`:
 
-| Метрика | Среднее | Мин | Макс | Порог | Статус |
-|---------|---------|-----|------|-------|--------|
+| Metric | Mean | Min | Max | Threshold | Status |
+|--------|------|-----|-----|-----------|--------|
 | **Faithfulness** | 0.87 | 0.72 | 0.95 | 0.7 | ✅ PASS |
 | **Answer Relevancy** | 0.83 | 0.71 | 0.92 | 0.7 | ✅ PASS |
 
-> 🧪 **Полный QA-аудит проекта** — 11 багов (3 Critical, 4 High, 3 Medium, 1 Low), все исправлены. Подробности в [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md).
+> 🔍 **Full QA Audit**: 11 bugs found & fixed (3 Critical, 4 High, 3 Medium, 1 Low). See [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md).
 
 ---
 
-## Тесты
+## Tests
 
-Проект включает **162 теста** по 8 модулям:
+The project includes **162 tests** across 8 modules:
 
 ```bash
 pytest tests/ -v
 ```
 
-С покрытием:
+With coverage:
 
 ```bash
 coverage run -m pytest tests/ -v
 coverage report
 ```
 
-| Модуль | Тестов | Что покрывает |
-|--------|--------|---------------|
-| `test_api.py` | 29 | Все эндпоинты, CORS, OpenAPI, Unicode filenames |
+| Module | Tests | Coverage |
+|--------|-------|----------|
+| `test_api.py` | 29 | All endpoints, CORS, OpenAPI, Unicode filenames |
 | `test_security.py` | 21 | Path traversal, XSS, SQL injection, shell injection, spoofing, error sanitization |
 | `test_stability.py` | 17 | Concurrent access, race conditions, memory growth, resource cleanup |
 | `test_ingestion.py` | 24 | PDF extraction, chunking, embeddings, tempfile safety, error handling |
 | `test_retrieval.py` | 16 | BM25Cache, ensemble retriever, hybrid search, thread-safety |
 | `test_generation.py` | 19 | GigaChat SDK, prompt building, error handling, TTL refresh |
-| `test_models.py` | 20 | Pydantic валидация всех моделей |
+| `test_models.py` | 20 | Pydantic validation for all request/response models |
 | `test_evaluation.py` | 16 | DeepEval routing, GigaChat metrics, auto backend, batch, parse |
 
 ---
 
 ## Code Quality
 
-Проект следует стандартам качества:
+This project follows strict code quality standards:
 
-- **Форматирование:** Black (line-length=100)
-- **Импорты:** isort (profile=black)
-- **Линтинг:** flake8
-- **Pre-commit:** проверка форматирования, trailing whitespace, YAML, конфликтов слияния
+- **Formatting:** Black (line-length=100)
+- **Imports:** isort (profile=black)
+- **Linting:** flake8 (E203, W503 ignored)
+- **Pre-commit:** formatting, trailing whitespace, YAML lint, merge conflict checks
 
-Установка pre-commit хуков:
+Install pre-commit hooks:
 
 ```bash
 pip install pre-commit
@@ -353,112 +342,116 @@ pre-commit install
 
 ---
 
-## Структура проекта
+## Project Structure
 
 ```
 contract-analyzer-ai/
 ├── app/
-│   ├── main.py                # FastAPI (upload, ask, evaluate, metrics, health)
-│   ├── config.py              # Настройки из .env + setup_logging()
-│   ├── models.py              # Pydantic схемы (Request/Response)
-│   ├── ingestion.py           # PDF → текст → чанкинг → Qdrant
-│   ├── retrieval.py           # Гибридный поиск + BM25Cache
-│   ├── generation.py          # Промптинг и вызов GigaChat
-│   └── evaluation.py          # DeepEval оценка (с API-key guard)
-├── tests/                     # 162 теста
-│   ├── test_api.py
-│   ├── test_security.py
-│   ├── test_stability.py
-│   ├── test_ingestion.py
-│   ├── test_retrieval.py
-│   ├── test_generation.py
-│   ├── test_models.py
-│   └── test_evaluation.py
+│   ├── main.py                # FastAPI (5 endpoints: upload, ask, evaluate, metrics, health)
+│   ├── config.py              # Environment-based configuration
+│   ├── models.py              # Pydantic request/response schemas
+│   ├── ingestion.py           # PDF → text → chunking → Qdrant pipeline
+│   ├── retrieval.py           # Hybrid search (vector + BM25) with BM25Cache
+│   ├── generation.py          # GigaChat prompt & response generation
+│   └── evaluation.py          # Quality metrics (GigaChat / DeepEval backends)
+├── tests/                     # 162 tests across 8 modules
+│   ├── test_api.py            # API integration tests
+│   ├── test_security.py       # Security vulnerability tests
+│   ├── test_stability.py      # Concurrency & stress tests
+│   ├── test_ingestion.py      # PDF ingestion unit tests
+│   ├── test_retrieval.py      # BM25Cache & retrieval unit tests
+│   ├── test_generation.py     # LLM generation unit tests
+│   ├── test_models.py         # Pydantic model tests
+│   └── test_evaluation.py     # Evaluation backend tests
 ├── frontend/
-│   ├── streamlit_app.py       # Streamlit-интерфейс (live metrics + per-answer scoring)
-│   ├── utils.py               # API-клиент для бэкенда
+│   ├── streamlit_app.py       # Streamlit web interface
+│   ├── utils.py               # Backend API client
 │   └── .streamlit/
-│       └── config.toml        # Настройки Streamlit
+│       └── config.toml        # Streamlit server config
 ├── data/
-│   ├── sample_contract.pdf    # Тестовый договор
-│   ├── eval_questions.json    # Датасет для оценки
-│   └── metrics.json           # Сохранённые метрики (резерв)
+│   ├── sample_contract.pdf    # Sample contract for testing
+│   └── eval_questions.json    # Evaluation dataset
 ├── docs/
-│   ├── CHANGELOG.md           # Лог изменений
-│   └── QA_AUDIT_REPORT.md     # Отчёт QA-аудита
-├── docker-compose.yml         # Qdrant + app + streamlit
-├── Dockerfile
-├── Dockerfile.streamlit
-├── requirements.txt
-├── requirements-dev.txt
-├── requirements-streamlit.txt
-├── .env.example
-├── .pre-commit-config.yaml
-├── CONTRIBUTING.md
-├── LICENSE
+│   ├── CHANGELOG.md           # Release changelog
+│   └── QA_AUDIT_REPORT.md     # Full QA audit report
+├── docker-compose.yml         # Qdrant + app + streamlit orchestration
+├── Dockerfile                 # Backend container
+├── Dockerfile.streamlit       # Frontend container
+├── requirements.txt           # Production dependencies
+├── requirements-dev.txt       # Development dependencies
+├── requirements-streamlit.txt # Frontend dependencies
+├── .env.example               # Environment template
+├── .pre-commit-config.yaml    # Pre-commit hooks
+├── .github/workflows/ci.yml   # CI pipeline
+├── Makefile                   # Common commands
+├── SECURITY.md                # Security policy
+├── CODE_OF_CONDUCT.md         # Contributor covenant
+├── CONTRIBUTING.md            # Contribution guide
+├── LICENSE                    # MIT license
 └── README.md
 ```
 
 ---
 
-## Технологии
+## Tech Stack
 
-- **Python 3.11** — язык разработки
-- **FastAPI** — REST API (5 эндпоинтов)
-- **Streamlit** — веб-интерфейс
-- **LangChain** — оркестрация RAG-пайплайна
-- **Qdrant** — векторная база данных
-- **HuggingFace Embeddings** — мультиязычные эмбеддинги (E5-large)
-- **BM25** — лексический поиск с кэшированием (BM25Cache)
-- **GigaChat** — генерация ответов на русском
-- **DeepEval** — оценка качества RAG (Faithfulness + Answer Relevancy)
-- **Docker** — контейнеризация (Qdrant + App + Streamlit)
-
----
-
-## Конфигурация
-
-| Переменная | По умолчанию | Описание |
-|------------|-------------|----------|
-| `GIGACHAT_CREDENTIALS` | — | Ключ доступа к GigaChat API |
-| `GIGACHAT_SCOPE` | `GIGACHAT_API_PERS` | Область доступа GigaChat |
-| `GIGACHAT_VERIFY_SSL` | `true` | SSL верификация (false для dev) |
-| `QDRANT_HOST` | `localhost` | Хост Qdrant |
-| `QDRANT_PORT` | `6333` | Порт Qdrant |
-| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | Модель эмбеддингов |
-| `COLLECTION_NAME` | `contracts` | Имя коллекции по умолчанию |
-| `CHUNK_SIZE` | `1000` | Размер чанка (символы) |
-| `CHUNK_OVERLAP` | `200` | Перекрытие чанков |
-| `TOP_K` | `5` | Количество результатов поиска |
-| `LOG_LEVEL` | `INFO` | Уровень логирования |
-| `EVAL_MODEL` | `gpt-4o` | Модель для DeepEval оценки |
-| `EVAL_BACKEND` | `auto` | Бэкенд оценки: `auto`, `gigachat`, `deepeval` |
-| `OPENAI_API_KEY` | — | API-ключ OpenAI для DeepEval (опционально) |
-| `API_KEY` | — | API-ключ для аутентификации (опционально) |
-| `MAX_FILE_SIZE_MB` | `20` | Максимальный размер загружаемого файла (МБ) |
-| `BACKEND_URL` | `http://localhost:8000` | URL бэкенда для Streamlit |
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **API** | FastAPI + Uvicorn | RESTful backend (5 endpoints) |
+| **Ingestion** | pdfplumber, LangChain | PDF text extraction, chunking, vectorization |
+| **Vector DB** | Qdrant | Vector storage & similarity search |
+| **Embeddings** | intfloat/multilingual-e5-large (HuggingFace) | Multilingual semantic vectors |
+| **Retrieval** | EnsembleRetriever (Vector + BM25) + BM25Cache | Hybrid search with caching |
+| **Generation** | GigaChat (Sber LLM) | Russian-language answer generation |
+| **Evaluation** | DeepEval / GigaChat (auto backend) | Faithfulness + Answer Relevancy scoring |
+| **Frontend** | Streamlit | Web interface with live metrics |
+| **Infrastructure** | Docker, Docker Compose | Container orchestration |
 
 ---
 
-## Фронтенд (Streamlit)
+## Configuration
 
-Веб-интерфейс на Streamlit для демонстрации возможностей сервиса без использования терминала.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GIGACHAT_CREDENTIALS` | — | GigaChat API credentials (required) |
+| `GIGACHAT_SCOPE` | `GIGACHAT_API_PERS` | GigaChat access scope |
+| `GIGACHAT_VERIFY_SSL` | `true` | SSL verification (set `false` for dev) |
+| `QDRANT_HOST` | `localhost` | Qdrant host |
+| `QDRANT_PORT` | `6333` | Qdrant port |
+| `EMBEDDING_MODEL` | `intfloat/multilingual-e5-large` | HuggingFace embedding model |
+| `QDRANT_FORCE_RECREATE` | `true` | Drop & recreate collection on upload |
+| `COLLECTION_NAME` | `contracts` | Default Qdrant collection |
+| `CHUNK_SIZE` | `1000` | Text chunk size (chars) |
+| `CHUNK_OVERLAP` | `200` | Chunk overlap |
+| `TOP_K` | `5` | Number of retrieved chunks |
+| `LOG_LEVEL` | `INFO` | Logging level |
+| `EVAL_MODEL` | `gpt-4o` | Model for DeepEval |
+| `EVAL_BACKEND` | `auto` | Evaluation backend: `auto`, `gigachat`, `deepeval` |
+| `OPENAI_API_KEY` | — | OpenAI key for DeepEval (optional) |
+| `API_KEY` | — | API auth key (optional) |
+| `MAX_FILE_SIZE_MB` | `20` | Max upload file size (MB) |
+| `CORS_ORIGINS` | `http://localhost:8501,http://localhost:3000` | Allowed CORS origins |
+| `BACKEND_URL` | `http://app:8000` | Backend URL for Streamlit |
 
-![Streamlit UI](https://img.shields.io/badge/Streamlit-1.28%2B-FF4B4B)
+---
 
-### Возможности
+## Frontend (Streamlit)
 
-- **Drag-and-drop** загрузка PDF-файлов
-- **Поле вопроса** с кнопкой отправки
-- **История вопросов и ответов** (session state, до 20 записей)
-- **Per-answer скоринг** — каждый ответ показывает Faithfulness и Relevancy с 🟢/🔴
-- **Живые метрики в сайдбаре** — агрегированные средние с PASS/FAIL, min/max
-- **Индикатор загрузки** при обработке и генерации
-- **Настройки подключения** к бэкенду (URL, коллекция)
-- **Проверка здоровья** бэкенда с визуальным статусом
-- **Предупреждение** о недоступности GigaChat
+Web interface for contract analysis without terminal usage.
 
-### Скриншот интерфейса
+### Features
+
+- **Drag-and-drop** PDF upload
+- **Question input** with real-time answer generation
+- **Q&A history** (session state, up to 20 entries)
+- **Per-answer scoring** — each answer shows Faithfulness & Relevancy with 🟢/🔴 indicators
+- **Live sidebar metrics** — aggregated averages with PASS/FAIL
+- **Loading indicator** during processing
+- **Connection settings** (backend URL, collection name)
+- **Health check** with visual status
+- **GigaChat availability** warning
+
+### UI Mockup
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -483,16 +476,16 @@ contract-analyzer-ai/
 └──────────────────┴───────────────────────────────────────┘
 ```
 
-### Запуск
+### Running
 
-Через Docker (вместе с бэкендом):
+Via Docker (with backend):
 
 ```bash
 docker-compose up --build
 # http://localhost:8501
 ```
 
-Локально (фронтенд отдельно):
+Locally (standalone frontend):
 
 ```bash
 cd frontend
@@ -500,87 +493,87 @@ pip install -r ../requirements-streamlit.txt
 streamlit run streamlit_app.py
 ```
 
-### Конфигурация фронтенда
+### Frontend Configuration
 
-| Переменная | По умолчанию | Описание |
-|------------|-------------|----------|
-| `BACKEND_URL` | `http://localhost:8000` | URL бэкенда |
-| `API_KEY` | — | API-ключ (если включён на бэкенде) |
-| `COLLECTION_NAME` | `contracts` | Имя коллекции в Qdrant |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKEND_URL` | `http://app:8000` | Backend URL |
+| `API_KEY` | — | API key (if enabled on backend) |
+| `COLLECTION_NAME` | `contracts` | Qdrant collection name |
 
 ---
 
 ## QA & Bug-Fix Report
 
-> **📄 Полный отчёт:** [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md) (2026-06-21, Hermes Agent)
+> **📄 Full report:** [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md)
 
-### Обзор
+### Overview
 
-Проведён полный QA-анализ проекта: проверка архитектуры, кода, тестов, Docker-инфраструктуры, UI и интеграции с внешними сервисами (GigaChat, Qdrant). Всего найдено и исправлено **11 багов** (3 Critical, 4 High, 3 Medium, 1 Low) в два этапа.
+A complete QA audit identified and fixed **11 bugs** (3 Critical, 4 High, 3 Medium, 1 Low) across architecture, code, tests, Docker infrastructure, UI, and external service integrations (GigaChat, Qdrant).
 
 ### 🔴 Critical
 
-#### CR-1: CORS wildcard с credentials
-**Проблема:** `allow_origins=["*"]` с `allow_credentials=True` — браузеры отклоняют такой CORS.
-**Решение:** Настроены `CORS_ORIGINS` из env с белым списком.
+#### CR-1: CORS wildcard with credentials
+**Issue:** `allow_origins=["*"]` with `allow_credentials=True` — browsers reject.
+**Fix:** Configurable `CORS_ORIGINS` from env with whitelist.
 
-#### CR-2: File size check после read()
-**Проблема:** `file.read()` без лимита → загрузка 2GB файла загружает память.
-**Решение:** `read_with_limit()` стримит по 1MB чанкам с проверкой до аллокации.
+#### CR-2: File size check after read()
+**Issue:** `file.read()` without limit — 2GB file loads entirely into memory.
+**Fix:** `read_with_limit()` streams in 1MB chunks with pre-allocation check.
 
-#### CR-3: Sensitive data в error responses
-**Проблема:** `str(e)` в API-ответах раскрывает internal paths, DB names, credentials.
-**Решение:** `_internal_error()` возвращает generic message + логирует detail.
+#### CR-3: Sensitive data in error responses
+**Issue:** `str(e)` in API responses leaks internal paths, DB names, credentials.
+**Fix:** `_internal_error()` returns generic message + logs details internally.
 
 ### 🟠 High
 
 #### High-1: BM25Cache thread-safety
-**Проблема:** `document_store` dict и `bm25_cache` модифицировались без lock.
-**Решение:** `threading.Lock()` вокруг всех операций с cache + store.
+**Issue:** `document_store` dict and `bm25_cache` modified without locks.
+**Fix:** `threading.Lock()` around all cache + store operations.
 
 #### High-2: GigaChat singleton race
-**Проблема:** `_giga_client` создавался двумя потоками одновременно.
-**Решение:** `threading.Lock()` + double-check.
+**Issue:** `_giga_client` created by two threads simultaneously.
+**Fix:** `threading.Lock()` + double-checked locking pattern.
 
 #### High-3: Empty LLM choices
-**Проблема:** Пустой `response.choices` → `IndexError`.
-**Решение:** guard `if not response.choices`.
+**Issue:** Empty `response.choices` → `IndexError`.
+**Fix:** Guard `if not response.choices`.
 
 #### High-4: Embeddings model initialization race
-**Проблема:** `SingletonEmbeddings` создавался параллельно несколькими workers.
-**Решение:** `threading.Lock()` при инициализации.
+**Issue:** Embeddings model initialized in parallel by multiple workers.
+**Fix:** `threading.Lock()` during singleton initialization.
 
 ### 🟡 Medium
 
 #### Medium-1: Temp file leak
-**Проблема:** `tempfile.NamedTemporaryFile` без `.close()` — утечка дескрипторов.
-**Решение:** `with TemporaryDirectory()` + `QDRANT_FORCE_RECREATE`.
+**Issue:** `tempfile.NamedTemporaryFile` without `.close()` — file descriptor leak.
+**Fix:** `with TemporaryDirectory()` + `QDRANT_FORCE_RECREATE` env var.
 
-#### Medium-2: Qdrant collection не очищается между uploads
-**Проблема:** Повторный upload не дропал коллекцию.
-**Решение:** `force_recreate` через `QdrantVectorStore.from_documents`.
+#### Medium-2: Qdrant collection not cleaned between uploads
+**Issue:** Repeated upload didn't drop the collection.
+**Fix:** `force_recreate` via `QdrantVectorStore.from_documents`.
 
 #### Medium-3: Hardcoded eval model
-**Проблема:** `gpt-4o` захардкожен — использовал GigaChat credentials для OpenAI.
-**Решение:** `EVAL_MODEL` из env, default `gpt-4o`.
+**Issue:** `gpt-4o` hardcoded — using GigaChat credentials for OpenAI model.
+**Fix:** `EVAL_MODEL` from env, default `gpt-4o`.
 
 ### 🔵 Low
 
 #### Low-1: Cohere Rerank dead code
-**Проблема:** `langchain-cohere` импортился, но не использовался.
-**Решение:** Удалён `langchain-cohere`, Cohere API key убран из .env.example.
+**Issue:** `langchain-cohere` imported but never used.
+**Fix:** Removed `langchain-cohere` and Cohere API key from `.env.example`.
 
-### Тестовая статистика
+### Test Statistics
 
 ```
-Покрытие: ~80% (app/)
-Всего тестов: 162
+Coverage: ~80% (app/)
+Total tests: 162
 Passed: 162
 Failed: 0
 ```
 
-| Модуль | Тестов | Описание |
-|--------|--------|----------|
+| Module | Tests | Description |
+|--------|-------|-------------|
 | `test_api.py` | 29 | Health, Upload, Ask, Evaluate, CORS, OpenAPI, Unicode |
 | `test_ingestion.py` | 24 | PDF extraction, chunking, vector store, tempfile safety |
 | `test_retrieval.py` | 16 | BM25 cache, ensemble retriever, hybrid search |
@@ -592,22 +585,47 @@ Failed: 0
 
 ---
 
-## Планы по улучшению
+## Roadmap
 
-- [ ] JWT-аутентификация
-- [ ] Redis-кэширование частых вопросов
-- [x] Streamlit-интерфейс для демонстрации ✅ `frontend/`
-- [x] Живые метрики качества (DeepEval per-answer + агрегация) ✅
-- [ ] Поддержка DOCX и других форматов
-- [ ] CI/CD через GitHub Actions *(реализован)*
-- [ ] Публикация статьи на Habr
-- [ ] Semantic Chunker (семантический чанкинг вместо RecursiveCharacterTextSplitter)
+- [ ] JWT authentication
+- [ ] Redis caching for frequent questions
+- [x] Streamlit UI ✅
+- [x] Live quality metrics (DeepEval per-answer + aggregation) ✅
+- [ ] DOCX and other format support
+- [x] CI/CD via GitHub Actions ✅
+- [ ] Semantic chunking (replace RecursiveCharacterTextSplitter)
+- [ ] Multi-worker state sharing (Redis)
+- [ ] Async LLM calls (non-blocking GigaChat)
 
 ---
 
-## Лицензия
+## 💻 Useful Commands
 
-MIT
+```bash
+make install       # Install production dependencies
+make install-dev   # Install all dependencies (including dev)
+make lint          # Run flake8 linter
+make format        # Auto-format with black + isort
+make test          # Run tests
+make coverage      # Run tests with coverage report
+make docker-up     # Start all Docker services
+make docker-down   # Stop all Docker services
+make clean         # Remove caches and build artifacts
+```
+
+---
+
+## 🤝 Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before submitting contributions.
+
+Report security vulnerabilities via [SECURITY.md](SECURITY.md).
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 

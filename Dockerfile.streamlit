@@ -2,14 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY requirements-streamlit.txt /app/requirements-streamlit.txt
+COPY requirements-streamlit.txt .
 RUN pip install --no-cache-dir -r requirements-streamlit.txt
 
-COPY frontend/ /app/frontend/
-COPY data/ /app/data/
+COPY frontend/ ./frontend/
+COPY data/ ./data/
 
 EXPOSE 8501
 

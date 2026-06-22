@@ -117,7 +117,7 @@ app = FastAPI(
     lifespan=lifespan,
     contact={
         "name": "Contract Analyzer AI",
-        "url": "https://github.com/your-username/contract-analyzer-ai",
+        "url": "https://github.com/your-username/contract-analyzer-ai",  # TODO: update before publish
     },
     license_info={
         "name": "MIT",

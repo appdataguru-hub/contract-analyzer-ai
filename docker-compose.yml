@@ -30,7 +30,7 @@ services:
       - QDRANT_PORT=6333
     depends_on:
       qdrant:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -42,11 +42,12 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - BACKEND_URL=http://176.108.252.198:8000
+      - BACKEND_URL=http://app:8000
       - API_KEY=${API_KEY}
       - COLLECTION_NAME=${COLLECTION_NAME:-contracts}
     depends_on:
-      - app
+      app:
+        condition: service_started
     volumes:
       - ./frontend:/app/frontend
       - ./data:/app/data

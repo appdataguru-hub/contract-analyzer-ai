@@ -3,6 +3,7 @@ venv/
 __pycache__/
 *.pyc
 .env
+.env.local
 qdrant_storage/
 data/sample_contract.pdf
 *.egg-info/
@@ -16,3 +17,18 @@ build/
 *.sqlite3
 *.log
 .DS_Store
+htmlcov/
+.coverage
+*.swp
+*.swo
+*~
+*.bak
+docs_html/
+Book/
+Daily/
+backup/
+backups/
+hh-parser/
+logs/
+models/
+node_modules/

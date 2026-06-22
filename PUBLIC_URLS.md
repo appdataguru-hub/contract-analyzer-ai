@@ -1,29 +1,21 @@
-# Публичные ссылки проекта Contract Analyzer AI
+# Contract Analyzer AI — Public Access URLs
 
-- **Фронтенд (Streamlit):** http://176.108.252.198:8501
-- **Бэкенд (FastAPI):** http://176.108.252.198:8000
-- **Swagger UI:** http://176.108.252.198:8000/docs
-- **Redoc:** http://176.108.252.198:8000/redoc
+> **⚠️ IMPORTANT**: Update these URLs before publishing. The IP below is a demo placeholder.
 
-## Для тестирования
+- **Frontend (Streamlit):** http://your-server:8501
+- **Backend (FastAPI):** http://your-server:8000
+- **Swagger UI:** http://your-server:8000/docs
 
-1. Откройте фронтенд по ссылке выше.
-2. Загрузите тестовый PDF из `data/sample_contract.pdf`.
-3. Задайте вопрос, например: *«Какая цена договора?»*
+## For Testing
 
-## Статус сервера
+1. Open the frontend URL above.
+2. Upload a PDF from `data/sample_contract.pdf`.
+3. Ask a question, e.g.: *"What is the contract price?"*
 
-- Версия: v1.0.0
-- Деплой: 2026-06-19
-- Сервер: VM с открытыми портами 8000 (бэкенд) и 8501 (фронтенд)
-- IP: 176.108.252.198
-
-## Локальный запуск
-
-Если сервер недоступен, запустите проект локально:
+## Local Deployment
 
 ```bash
-git clone https://github.com/your-username/contract-analyzer-ai.git
+git clone https://github.com/appdataguru-hub/contract-analyzer-ai.git
 cd contract-analyzer-ai
 docker-compose up --build
 ```
