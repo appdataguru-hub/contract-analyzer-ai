@@ -37,7 +37,6 @@
 
 ## Архитектура
 
-```
                          flowchart TB
     subgraph FE["🖥️ Frontend"]
         UI["Streamlit UI<br>port 8501"]
@@ -86,8 +85,6 @@
 | **Metrics** | In-memory агрегатор + REST endpoint | Живые агрегированные метрики |
 | **Frontend** | Streamlit | Веб-интерфейс с per-answer скоррингом |
 | **Infrastructure** | Docker, Docker Compose | Контейнеризация |
-
----
 
 ## 📋 Требования
 
