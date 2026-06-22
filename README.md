@@ -51,7 +51,6 @@
 
 ```mermaid
 flowchart TB
-flowchart TB
     classDef frontend fill:#eef2f7,stroke:#4a5568,stroke-width:1.5px
     classDef backend fill:#edf2f7,stroke:#4a5568,stroke-width:1.5px
     classDef storage fill:#e2e8f0,stroke:#4a5568,stroke-width:1.5px
