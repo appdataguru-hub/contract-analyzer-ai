@@ -1,10 +1,12 @@
 # Contract Analyzer AI
 
-[![Python Version](https://img.shields.io/badge/python-3.11-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED)]()
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)]()
-[![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)]()
+[![Python Version](https://img.shields.io/badge/python-3.11-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED)](https://www.docker.com/)
+[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](.github/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)](https://github.com/appdataguru-hub/contract-analyzer-ai/actions)
+[![Demo](https://img.shields.io/badge/demo-online-brightgreen)](http://176.108.252.198:8501)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
 **Contract Analyzer AI** — hybrid RAG-based service for PDF contract analysis with Russian-language support via GigaChat.
 
@@ -620,6 +622,17 @@ make clean         # Remove caches and build artifacts
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before submitting contributions.
 
 Report security vulnerabilities via [SECURITY.md](SECURITY.md).
+
+---
+
+## 🙏 Acknowledgements
+
+- [GigaChat](https://developers.sber.ru/gigachat) — Russian LLM by Sber
+- [Qdrant](https://qdrant.tech/) — Vector database
+- [LangChain](https://www.langchain.com/) — RAG pipeline framework
+- [Streamlit](https://streamlit.io/) — Fast AI app framework
+- [DeepEval](https://docs.confident-ai.com/) — RAG quality evaluation
+- [pdfplumber](https://github.com/jsvine/pdfplumber) — PDF text extraction
 
 ---
 
