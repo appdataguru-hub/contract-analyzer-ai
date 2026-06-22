@@ -35,56 +35,88 @@
 
 ---
 
-## Архитектура
+## 🏗️ Архитектура
 
-                         flowchart TB
-    subgraph FE["🖥️ Frontend"]
-        UI["Streamlit UI<br>port 8501"]
+```mermaid
+flowchart TB
+    %% Стилизация
+    classDef frontend fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef backend fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef storage fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef metrics fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    classDef client fill:#fce4ec,stroke:#b71c1c,stroke-width:2px
+    classDef llm fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+
+    %% Клиентский слой
+    subgraph Client["👤 Клиент"]
+        Browser["🌐 Браузер / curl"]
     end
+    class Client client
 
-    subgraph BE["⚙️ Backend"]
-        API["FastAPI<br>port 8000"]
+    %% Фронтенд
+    subgraph Frontend["🖥️ Фронтенд (Streamlit)"]
+        UI["Streamlit UI<br>port 8501<br>frontend/streamlit_app.py"]
+    end
+    class Frontend frontend
 
-        subgraph ING["📥 Ingestion"]
+    %% Бэкенд
+    subgraph Backend["⚙️ Бэкенд (FastAPI)"]
+        API["FastAPI Server<br>port 8000<br>app/main.py"]
+
+        subgraph Ingestion["📥 Ingestion Pipeline"]
             PDF["PDF → Text<br>pdfplumber"]
-            CHUNK["Chunking<br>LangChain"]
-            EMBED["Embedding<br>E5-large"]
+            Chunk["Chunking<br>LangChain"]
+            Embed["Embedding<br>multilingual-e5-large"]
         end
 
-        subgraph VEC["💾 Vector Storage"]
-            QDRANT[("Qdrant<br>Vector DB")]
-            BM25[("BM25Cache<br>in-memory")]
+        subgraph Retrieval["🔍 Retrieval Pipeline"]
+            Ensemble["EnsembleRetriever<br>Vector + BM25<br>weights: 0.5 / 0.5"]
         end
 
-        subgraph RET["🔍 Retrieval"]
-            ENSEMBLE["EnsembleRetriever<br>Vector + BM25"]
-        end
-
-        subgraph GEN["🤖 Generation"]
-            LLM["GigaChat / DeepEval"]
+        subgraph Generation["🤖 Generation Pipeline"]
+            LLM["GigaChat API<br>Russian LLM"]
+            Eval["DeepEval<br>Quality Metrics"]
         end
     end
+    class Backend backend
 
-    UI -->|REST API| API
-    API --> PDF --> CHUNK --> EMBED --> QDRANT
-    API --> ENSEMBLE --> QDRANT & BM25
+    %% Хранилище
+    subgraph Storage["💾 Хранилище"]
+        Qdrant[("Qdrant<br>Vector Database<br>port 6333")]
+        BM25[("BM25Cache<br>in-memory<br>thread-safe")]
+    end
+    class Storage storage
+
+    %% Метрики
+    subgraph Metrics["📊 Метрики"]
+        Aggregator["In-memory Aggregator<br>Faithfulness + Relevancy"]
+        MetricsEndpoint["GET /metrics<br>JSON response"]
+    end
+    class Metrics metrics
+
+    %% Связи
+    Browser -->|"POST /upload"| API
+    Browser -->|"POST /ask"| API
+    Browser -->|"GET /metrics"| API
+    Browser -->|"GET /health"| API
+
+    UI -->|"REST API"| API
+
+    API --> PDF
+    PDF --> Chunk
+    Chunk --> Embed
+    Embed --> Qdrant
+
+    API --> Ensemble
+    Ensemble --> Qdrant
+    Ensemble --> BM25
+
     API --> LLM
+    API --> Eval
+
+    API --> Aggregator
+    Aggregator --> MetricsEndpoint
 ```
-
-### Components
-
-| Компонент | Технология | Назначение |
-|-----------|-----------|-----------|
-| **API** | FastAPI + Uvicorn | 5 эндпоинтов: upload, ask, evaluate, metrics, health |
-| **Ingestion** | pdfplumber, LangChain | Извлечение текста, чанкинг, векторизация |
-| **Vector DB** | Qdrant | Хранение и поиск эмбеддингов |
-| **Embeddings** | multilingual-e5-large (HuggingFace) | Семантические векторы текста |
-| **Retrieval** | EnsembleRetriever (Vector + BM25) + BM25Cache | Гибридный поиск с кэшированием |
-| **Generation** | GigaChat API | Формирование ответа на русском |
-| **Evaluation** | DeepEval (Faithfulness + Answer Relevancy) | Оценка качества каждого ответа |
-| **Metrics** | In-memory агрегатор + REST endpoint | Живые агрегированные метрики |
-| **Frontend** | Streamlit | Веб-интерфейс с per-answer скоррингом |
-| **Infrastructure** | Docker, Docker Compose | Контейнеризация |
 
 ## 📋 Требования
 
