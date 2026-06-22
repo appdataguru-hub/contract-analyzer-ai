@@ -1,17 +1,25 @@
 # Contract Analyzer AI
 
-<div align="center">
+<p align="center">
+  <a href="http://176.108.252.198:8501">
+    <img src="https://img.shields.io/badge/%F0%9F%8C%90_%D0%94%D0%B5%D0%BC%D0%BE-%D0%BE%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD-brightgreen?style=for-the-badge" alt="Demo">
+  </a>
+  <a href="http://176.108.252.198:8000/docs">
+    <img src="https://img.shields.io/badge/%F0%9F%93%9A_Swagger-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B5%D0%BD-blue?style=for-the-badge" alt="API Docs">
+  </a>
+  <a href="https://github.com/appdataguru-hub/contract-analyzer-ai">
+    <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub">
+  </a>
+</p>
 
-![Python Version](https://img.shields.io/badge/python-3.11-blue)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-2496ED)](https://www.docker.com/)
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](.github/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)](https://github.com/appdataguru-hub/contract-analyzer-ai/actions)
-[![Demo](https://img.shields.io/badge/%F0%9F%8C%90_%D0%94%D0%B5%D0%BC%D0%BE-%D0%BE%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD-brightgreen?style=for-the-badge)](http://176.108.252.198:8501)
-[![API Docs](https://img.shields.io/badge/%F0%9F%93%9A_Swagger-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B5%D0%BD-blue?style=for-the-badge)](http://176.108.252.198:8000/docs)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
-
-</div>
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square" alt="CI">
+  <img src="https://img.shields.io/badge/Coverage-80%25-yellowgreen?style=flat-square" alt="Coverage">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
+</p>
 
 **Contract Analyzer AI** — гибридная RAG-система для анализа PDF-договоров с поддержкой русского языка через GigaChat. Загрузите PDF, задавайте вопросы на естественном языке и получайте ответы от ИИ с оценкой качества в реальном времени (Faithfulness + Answer Relevancy).
 
@@ -19,14 +27,11 @@
 
 ## 🚀 Быстрый старт
 
-| Действие | Ссылка |
-|----------|--------|
-| **🌐 Попробовать демо** | [http://176.108.252.198:8501](http://176.108.252.198:8501) |
-| **📚 Изучить API** | [http://176.108.252.198:8000/docs](http://176.108.252.198:8000/docs) |
-| **🐳 Запустить локально** | `docker-compose up --build` |
-| **📖 Читать документацию** | [README](README.md) |
-
-> 💡 **Совет:** Нажмите на демо-ссылку, чтобы увидеть работающий сервис без установки!
+<p align="center">
+  <a href="#-установка-и-настройка"><img src="https://img.shields.io/badge/%F0%9F%90%B3_%D0%97%D0%B0%D0%BF%D1%83%D1%81%D0%BA_%D1%87%D0%B5%D1%80%D0%B5%D0%B7_Docker-%D0%B8%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F-blue?style=for-the-badge" alt="Docker"></a>
+  <a href="#-использование-api"><img src="https://img.shields.io/badge/%F0%9F%93%A1_API_%D0%BF%D1%80%D0%B8%D0%BC%D0%B5%D1%80%D1%8B-curl-success?style=for-the-badge" alt="API"></a>
+  <a href="#-фронтенд-streamlit"><img src="https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F_%D0%98%D0%BD%D1%82%D0%B5%D1%80%D1%84%D0%B5%D0%B9%D1%81-Streamlit-orange?style=for-the-badge" alt="Streamlit"></a>
+</p>
 
 ---
 
