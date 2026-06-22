@@ -1,21 +1,35 @@
-# Contract Analyzer AI — Public Access URLs
+# Публичные ссылки — Contract Analyzer AI
 
-> **⚠️ IMPORTANT**: Update these URLs before publishing. The IP below is a demo placeholder.
+## 🌐 Демо и API
 
-- **Frontend (Streamlit):** http://your-server:8501
-- **Backend (FastAPI):** http://your-server:8000
-- **Swagger UI:** http://your-server:8000/docs
+| Компонент | Ссылка |
+|-----------|--------|
+| **Демо (Streamlit UI)** | [http://176.108.252.198:8501](http://176.108.252.198:8501) |
+| **Бэкенд API** | [http://176.108.252.198:8000](http://176.108.252.198:8000) |
+| **Swagger UI** | [http://176.108.252.198:8000/docs](http://176.108.252.198:8000/docs) |
+| **Redoc** | [http://176.108.252.198:8000/redoc](http://176.108.252.198:8000/redoc) |
+| **Health Check** | [http://176.108.252.198:8000/health](http://176.108.252.198:8000/health) |
+| **Метрики** | [http://176.108.252.198:8000/metrics](http://176.108.252.198:8000/metrics) |
 
-## For Testing
+## 📋 Примеры запросов
 
-1. Open the frontend URL above.
-2. Upload a PDF from `data/sample_contract.pdf`.
-3. Ask a question, e.g.: *"What is the contract price?"*
-
-## Local Deployment
-
+### Загрузка PDF
 ```bash
-git clone https://github.com/appdataguru-hub/contract-analyzer-ai.git
-cd contract-analyzer-ai
-docker-compose up --build
+curl -X POST http://176.108.252.198:8000/upload -F "file=@sample_contract.pdf"
 ```
+
+### Задать вопрос
+```bash
+curl -X POST http://176.108.252.198:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Какая цена договора?"}'
+```
+
+### Получить метрики
+```bash
+curl http://176.108.252.198:8000/metrics
+```
+
+**Статус:** 🟢 Онлайн
+**Дата обновления:** 2026-06-22
+**Версия:** v1.1.0

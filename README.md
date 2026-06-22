@@ -5,7 +5,8 @@
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED)](https://www.docker.com/)
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen)](.github/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-80%25-yellowgreen)](https://github.com/appdataguru-hub/contract-analyzer-ai/actions)
-[![Demo](https://img.shields.io/badge/demo-online-brightgreen)](http://176.108.252.198:8501)
+[![Demo](https://img.shields.io/badge/%F0%9F%8C%90_%D0%94%D0%B5%D0%BC%D0%BE-%D0%BE%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD-brightgreen?style=for-the-badge)](http://176.108.252.198:8501)
+[![API Docs](https://img.shields.io/badge/%F0%9F%93%9A_Swagger-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B5%D0%BD-blue?style=for-the-badge)](http://176.108.252.198:8000/docs)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
 **Contract Analyzer AI** — гибридная RAG-система для анализа PDF-договоров с поддержкой русского языка через GigaChat.
@@ -13,6 +14,20 @@
 Загрузите PDF-договор, задавайте вопросы на естественном языке и получайте ответы от ИИ с оценкой качества в реальном времени (Faithfulness + Answer Relevancy). Стек: FastAPI, Qdrant, LangChain, GigaChat.
 
 > 📋 **Полный QA-отчёт:** [`docs/QA_AUDIT_REPORT.md`](docs/QA_AUDIT_REPORT.md) — 11 багов найдено и исправлено, улучшения архитектуры, статистика тестов.
+
+## 🌐 Демо
+
+Проект доступен для тестирования в реальном времени:
+
+| Сервис | Ссылка |
+|--------|--------|
+| **🚀 Фронтенд (Streamlit)** | [http://176.108.252.198:8501](http://176.108.252.198:8501) |
+| **⚙️ Бэкенд API** | [http://176.108.252.198:8000](http://176.108.252.198:8000) |
+| **📚 Swagger UI** | [http://176.108.252.198:8000/docs](http://176.108.252.198:8000/docs) |
+| **💚 Health Check** | [http://176.108.252.198:8000/health](http://176.108.252.198:8000/health) |
+| **📊 Метрики** | [http://176.108.252.198:8000/metrics](http://176.108.252.198:8000/metrics) |
+
+> ⚠️ **Внимание:** Демо развёрнуто на тестовой VM и может быть недоступно в случае остановки сервера. Для локального запуска используйте [инструкцию по установке](#-быстрый-старт).
 
 ---
 
@@ -452,6 +467,12 @@ contract-analyzer-ai/
 - **Настройки подключения** (URL бэкенда, коллекция)
 - **Проверка здоровья** с визуальным статусом
 - **Предупреждение** о доступности GigaChat
+
+### Скриншот интерфейса
+
+![Streamlit UI](docs/screenshot.png)
+
+> *Реальный вид интерфейса после загрузки договора и задавания вопроса.*
 
 ### Макет UI
 
