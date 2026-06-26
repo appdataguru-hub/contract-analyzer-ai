@@ -42,7 +42,7 @@ services:
     ports:
       - "8501:8501"
     environment:
-      - BACKEND_URL=http://app:8000
+      - BACKEND_URL=http://176.108.250.156:8000
       - API_KEY=${API_KEY}
       - COLLECTION_NAME=${COLLECTION_NAME:-contracts}
     depends_on:

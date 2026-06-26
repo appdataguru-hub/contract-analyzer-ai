@@ -1,10 +1,10 @@
 # Contract Analyzer AI
 
 <p align="center">
-  <a href="http://176.108.252.198:8501">
+  <a href="http://176.108.250.156:8501">
     <img src="https://img.shields.io/badge/%F0%9F%8C%90_%D0%94%D0%B5%D0%BC%D0%BE-%D0%BE%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD-brightgreen?style=for-the-badge" alt="Demo">
   </a>
-  <a href="http://176.108.252.198:8000/docs">
+  <a href="http://176.108.250.156:8000/docs">
     <img src="https://img.shields.io/badge/%F0%9F%93%9A_Swagger-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF%D0%B5%D0%BD-blue?style=for-the-badge" alt="API Docs">
   </a>
   <a href="https://github.com/appdataguru-hub/contract-analyzer-ai">
@@ -37,11 +37,11 @@
 
 | Сервис | Ссылка |
 |--------|--------|
-| **🚀 Фронтенд (Streamlit)** | [http://176.108.252.198:8501](http://176.108.252.198:8501) |
-| **⚙️ Бэкенд API** | [http://176.108.252.198:8000](http://176.108.252.198:8000) |
-| **📚 Swagger UI** | [http://176.108.252.198:8000/docs](http://176.108.252.198:8000/docs) |
-| **💚 Health Check** | [http://176.108.252.198:8000/health](http://176.108.252.198:8000/health) |
-| **📊 Метрики** | [http://176.108.252.198:8000/metrics](http://176.108.252.198:8000/metrics) |
+| **🚀 Фронтенд (Streamlit)** | [http://176.108.250.156:8501](http://176.108.250.156:8501) |
+| **⚙️ Бэкенд API** | [http://176.108.250.156:8000](http://176.108.250.156:8000) |
+| **📚 Swagger UI** | [http://176.108.250.156:8000/docs](http://176.108.250.156:8000/docs) |
+| **💚 Health Check** | [http://176.108.250.156:8000/health](http://176.108.250.156:8000/health) |
+| **📊 Метрики** | [http://176.108.250.156:8000/metrics](http://176.108.250.156:8000/metrics) |
 
 > ⚠️ **Внимание:** Демо развёрнуто на тестовой VM и может быть недоступно в случае остановки сервера. Для локального запуска используйте [инструкцию по установке](#-установка-и-настройка).
 
